@@ -1,0 +1,4 @@
+package diskscanner
+
+type BuildDir struct {
+}

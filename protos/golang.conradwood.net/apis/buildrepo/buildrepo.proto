@@ -1,0 +1,192 @@
+
+syntax = "proto3";
+
+package buildrepo;
+option java_package = "net.conradwood.golang.apis.buildrepo";
+
+import "golang.conradwood.net/apis/common/common.proto";
+
+message CreateBuildRequest {
+  // deprecated - use repo id instead
+  string Repository = 1;
+  string CommitID = 2;
+  string Branch = 3;
+  uint64 BuildID = 4;
+  string CommitMSG = 5;
+  string UserEmail = 6;
+  uint64 RepositoryID = 7;
+  // the artefact name - under which path to save it
+  string ArtefactName = 8;
+}
+
+message CreateBuildResponse {
+  string BuildStoreid = 1;
+}
+
+message UploadTokenRequest {
+  string BuildStoreid = 1;
+  string Filename = 2;
+  string UserEmail = 3;
+}
+message UploadTokenResponse {
+  string Token = 1;
+}
+
+message UploadDoneRequest {
+  string BuildStoreid = 1;
+}
+message UploadDoneResponse {
+  bool Closed = 1;
+  uint32 Uploading = 2;
+}
+
+message RepoEntry {
+  string Name = 1; // filename w/o leading directories
+  int32 Type = 2;
+  string Dir = 3;    // path (in repo) w/o Filename
+  string Domain = 4; // same repo might exist with different domains
+GetLatestVersionResponse LatestBuild=5; // latest build in the master branch of this repo (incl. repositoryid)
+}
+message ListReposRequest {
+}
+message ListReposResponse {
+  repeated RepoEntry Entries = 1;
+}
+
+message ListBranchesRequest {
+  string Repository = 1;
+}
+message ListBranchesResponse {
+  repeated RepoEntry Entries = 1;
+}
+
+message ListVersionsRequest {
+  string Repository = 1;
+  string Branch = 2;
+}
+message ListVersionsResponse {
+  repeated RepoEntry Entries = 1;
+}
+message ListFilesRequest {
+  string Repository = 1;
+  string Branch = 2;
+  uint64 BuildID = 3;
+  string Dir = 4;     // top level dir in which to list entries
+  bool Recursive = 5; // if true, descend into directories and include those in response
+}
+message ListFilesResponse {
+  repeated RepoEntry Entries = 1;
+}
+message GetLatestVersionRequest {
+  string Repository = 1;
+  string Branch = 2;
+}
+message GetLatestVersionResponse {
+  uint64 BuildID = 1;
+  BuildMeta BuildMeta=2;
+}
+
+// metadata about this repo
+message BuildMeta {
+  uint64 RepositoryID=1; // the gitserver repositoryID as reported when creating the build
+  string CommitID=2; // the commit id of this build
+  string Branch=3; // the branch used to create this build
+}
+
+message GetBlockRequest {
+  File file = 1;
+  uint64 Offset = 2;
+  uint32 Size = 3; // grpc transport limit: max 32k !
+}
+
+message GetBlockResponse {
+  File file = 1;
+  uint64 Offset = 2;
+  uint32 Size = 3; // grpc transport limit: max 32k !
+  bytes Data = 4;
+}
+
+// identify a unique file
+message File {
+  string Repository = 1;
+  string Branch = 2;
+  uint64 BuildID = 3;
+  string Filename = 4;
+}
+
+message Tool {
+  string Repository = 1;
+  string Filename = 2;
+}
+
+message ListToolsResponse {
+  repeated Tool Tools = 1;
+}
+
+message GetFileRequest {
+  File file = 1;
+  uint32 Blocksize = 2;
+}
+
+// response to above request : chunk of bytes, to be streamed
+message FileBlock {
+  uint64 Size = 1;
+  bytes Data = 2;
+  string UploadToken =3; // an upload token (authentication / pairing)
+}
+
+message GetMetaRequest {
+  File File = 1;
+}
+message GetMetaResponse {
+  File file = 1;
+  uint64 Size = 2;
+}
+
+message RepoDef {
+  string Repository = 1;
+  string Branch = 2;
+}
+message BuildNumber {
+  uint64 BuildID = 1;
+}
+
+message BuildDef {
+  string Repository = 1;
+  string Branch = 2;
+  uint64 BuildID = 3;
+}
+
+message BuildInfo {
+  string CommitID = 1;
+  string CommitMessage = 2;
+  string UserEmail = 3;
+  uint32 BuildDate = 4;
+}
+
+message FilePattern {
+  string Pattern = 1;
+}
+message FileList {
+  repeated File Files = 1;
+}
+
+service BuildRepoManager {
+  rpc CreateBuild(CreateBuildRequest) returns (CreateBuildResponse);
+  rpc GetUploadToken(UploadTokenRequest) returns (UploadTokenResponse);
+  rpc UploadsComplete(UploadDoneRequest) returns (UploadDoneResponse);
+  rpc ListRepos(ListReposRequest) returns (ListReposResponse);
+  rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse);
+  rpc ListVersions(ListVersionsRequest) returns (ListVersionsResponse);
+  rpc ListFiles(ListFilesRequest) returns (ListFilesResponse);
+  rpc ListTools(common.Void) returns (ListToolsResponse);
+  rpc GetLatestVersion(GetLatestVersionRequest) returns (GetLatestVersionResponse);
+  rpc GetBlock(GetBlockRequest) returns (GetBlockResponse);
+  rpc GetFileMetaData(GetMetaRequest) returns (GetMetaResponse);
+  rpc GetFileAsStream(GetFileRequest) returns (stream FileBlock);
+  rpc PutFileAsStream(stream FileBlock) returns (common.Void);
+  rpc ReserveNextBuildNumber(RepoDef) returns (BuildNumber);
+  rpc GetBuildInfo(BuildDef) returns (BuildInfo);
+  // find a file by name in any repo
+  rpc FindFiles(FilePattern) returns (FileList);
+}

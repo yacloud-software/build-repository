@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -25,14 +26,19 @@ func (b *BuildDir) Size() uint64 {
 func (b *BuildDir) Archivable() []*Version {
 	var res []*Version
 	for _, r := range b.repos {
+		min_versions := 3
+		if strings.Contains(r.name, "go-easyops") {
+			// go-easyops is special, we need to keep those around for longer (modules)
+			min_versions = 30
+		}
 		for _, b := range r.branches {
-			if len(b.versions) < 3 {
+			if len(b.versions) < min_versions {
 				continue
 			}
 			sort.Slice(b.versions, func(i, j int) bool {
 				return b.versions[i].version < b.versions[j].version
 			})
-			arc := b.versions[:len(b.versions)-3]
+			arc := b.versions[:len(b.versions)-min_versions]
 			for _, v := range arc {
 				res = append(res, v)
 			}

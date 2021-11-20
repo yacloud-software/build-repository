@@ -1,6 +1,6 @@
 // client create: BuildRepoManagerClient
 /* geninfo:
-   filename  : golang.conradwood.net/apis/buildrepo/buildrepo.proto
+   filename  : protos/golang.conradwood.net/apis/buildrepo/buildrepo.proto
    gopackage : golang.conradwood.net/apis/buildrepo
    importname: ai_0
    varname   : client_BuildRepoManagerClient_0

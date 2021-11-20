@@ -171,6 +171,10 @@ message FileList {
   repeated File Files = 1;
 }
 
+message FileExistsInfo {
+  bool Exists=1;
+}
+
 service BuildRepoManager {
   rpc CreateBuild(CreateBuildRequest) returns (CreateBuildResponse);
   rpc GetUploadToken(UploadTokenRequest) returns (UploadTokenResponse);
@@ -189,4 +193,6 @@ service BuildRepoManager {
   rpc GetBuildInfo(BuildDef) returns (BuildInfo);
   // find a file by name in any repo
   rpc FindFiles(FilePattern) returns (FileList);
+  // does file exist
+  rpc DoesFileExist(GetFileRequest) returns (FileExistsInfo);
 }

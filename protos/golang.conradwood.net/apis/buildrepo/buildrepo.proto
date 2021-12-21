@@ -174,6 +174,13 @@ message FileList {
 message FileExistsInfo {
   bool Exists=1;
 }
+message GetRepoMetaRequest {
+  string Path=1; // e.g. "autodeployer"
+}
+message RepoMetaInfo {
+  uint64 RepositoryID=1;
+}
+
 
 service BuildRepoManager {
   rpc CreateBuild(CreateBuildRequest) returns (CreateBuildResponse);
@@ -195,4 +202,6 @@ service BuildRepoManager {
   rpc FindFiles(FilePattern) returns (FileList);
   // does file exist
   rpc DoesFileExist(GetFileRequest) returns (FileExistsInfo);
+  // get some metadata about an artefact (which this is, it is not a repository)
+  rpc GetRepositoryMeta(GetRepoMetaRequest) returns (RepoMetaInfo);
 }

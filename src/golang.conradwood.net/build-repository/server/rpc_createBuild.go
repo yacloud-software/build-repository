@@ -33,7 +33,12 @@ func (brs *BuildRepoServer) CreateBuild(ctx context.Context, cr *pb.CreateBuildR
 	if cr.BuildID == 0 {
 		return nil, errors.New("Missing build id")
 	}
-
+	if cr.RepositoryID != 0 {
+		err := setRepositoryMetaRepositoryID(ctx, cr.Repository, cr.RepositoryID)
+		if err != nil {
+			return nil, err
+		}
+	}
 	resp := pb.CreateBuildResponse{}
 
 	dir := fmt.Sprintf("%s/%s/%s/%d", base, cr.Repository, cr.Branch, cr.BuildID)

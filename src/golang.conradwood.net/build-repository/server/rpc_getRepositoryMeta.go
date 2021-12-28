@@ -6,6 +6,7 @@ import (
 	pb "golang.conradwood.net/apis/buildrepo"
 	"golang.conradwood.net/go-easyops/errors"
 	"golang.conradwood.net/go-easyops/utils"
+	"os"
 )
 
 func (b *BuildRepoServer) GetRepositoryMeta(ctx context.Context, req *pb.GetRepoMetaRequest) (*pb.RepoMetaInfo, error) {
@@ -31,11 +32,13 @@ func loadRepoMeta(ctx context.Context, repo string) (*pb.RepoMetaInfo, error) {
 	return res, nil
 }
 func saveRepoMeta(ctx context.Context, repo string, meta *pb.RepoMetaInfo) error {
-	filename := fmt.Sprintf("%s/%s/repometa.proto", *metadir, repo)
+	dir := fmt.Sprintf("%s/%s", *metadir, repo)
+	filename := fmt.Sprintf("%s/repometa.proto", dir)
 	bs, err := utils.MarshalBytes(meta)
 	if err != nil {
 		return err
 	}
+	os.MkdirAll(dir, 0777)
 	err = utils.WriteFile(filename, bs)
 	if err != nil {
 		return err

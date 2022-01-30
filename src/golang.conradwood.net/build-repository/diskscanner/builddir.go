@@ -101,6 +101,7 @@ func (b *Branch) Size() uint64 {
 /*****************************************************************
 * Version
 *****************************************************************/
+// a version is a single version, of a branch in a repository
 type Version struct {
 	branch  *Branch
 	version int

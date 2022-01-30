@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"golang.conradwood.net/go-easyops/linux"
+	"golang.conradwood.net/go-easyops/utils"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -101,6 +102,11 @@ func (d *DiskScanner) find() {
 			if d.Builds.Size() < maxBytes {
 				break
 			}
+			err = sync_to_archive(v)
+			if err != nil {
+				fmt.Printf("Error syncing: %s\n", utils.ErrorString(err))
+				break
+			}
 			fmt.Printf("[diskscanner] %3d. Version %d in %s (%v) (size=%dGb)\n", i, v.version, v.Path(), v.Created(), d.Builds.Size()/1024/1024/1024)
 			err = os.RemoveAll(v.Path())
 			if err != nil {
@@ -179,4 +185,9 @@ func (d *DiskScanner) calc() (*BuildDir, error) {
 	}
 
 	return res, nil
+}
+
+func sync_to_archive(v *Version) error {
+	fmt.Printf("[diskscanner] syncing %s, %s\n", v.branch.repo.builddir, v.branch.name)
+	return nil
 }

@@ -35,6 +35,7 @@ require (
 	golang.conradwood.net/apis/rpcinterceptor v1.1.1549 // indirect
 	golang.org/x/sys v0.0.0-20220128215802-99c3d69c2c27 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	golang.yacloud.eu/apis/buildrepoarchive v1.1.1549 // indirect
 	google.golang.org/genproto v0.0.0-20220126215142-9970aeb2e350 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 )

@@ -3,8 +3,11 @@ package diskscanner
 import (
 	"flag"
 	"fmt"
+	"golang.conradwood.net/go-easyops/authremote"
 	"golang.conradwood.net/go-easyops/linux"
 	"golang.conradwood.net/go-easyops/utils"
+	ba "golang.yacloud.eu/apis/buildrepoarchive"
+	"io"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -12,6 +15,7 @@ import (
 )
 
 var (
+	domain_id   = flag.String("domain_id", "default_buildrepo_service", "domain id for buildrepo")
 	do_remove   = flag.Bool("do_remove", false, "if true actually delete archived stuff")
 	debug       = flag.Bool("diskscanner_debug", false, "diskscanner debug mode")
 	backup      = flag.Bool("diskscanner_backup", true, "run backups of everything regularly and prior to archiving")
@@ -191,6 +195,90 @@ func (d *DiskScanner) calc() (*BuildDir, error) {
 }
 
 func sync_to_archive(v *Version) error {
+	bc := ba.GetBuildRepoArchiveClient()
+	key := fmt.Sprintf("%s/%s/%d", v.branch.repo.name, v.branch.name, v.version)
+	ctx := authremote.Context()
+	srv, err := bc.Upload(ctx)
+	if err != nil {
+		return err
+	}
+	err = srv.Send(&ba.UploadRequest{DomainID: *domain_id, Key: key})
+	if err != nil {
+		return err
+	}
+
+	dirs := []string{
+		fmt.Sprintf("artefacts/%s/%s/%d", v.branch.repo.name, v.branch.name, v.version),
+		fmt.Sprintf("metadata/%s/%s/%d", v.branch.repo.name, v.branch.name, v.version),
+	}
+	for _, local_dir := range dirs {
+		fmt.Printf("[diskscanner] Uploading %s...\n", local_dir)
+
+		err = upload_dir(srv, local_dir)
+		if err != nil {
+			return err
+		}
+	}
+	_, err = srv.CloseAndRecv()
+	if err != io.EOF {
+		return err
+	}
+
 	fmt.Printf("[diskscanner] syncing %s, %s, %s, version=%d\n", v.branch.repo.builddir.root, v.branch.repo.name, v.branch.name, v.version)
+	return nil
+}
+func upload_dir(srv ba.BuildRepoArchive_UploadClient, dir string) error {
+	files, err := ioutil.ReadDir("/srv/build-repository/" + dir)
+	utils.Bail("failed to read dir", err)
+	for _, f := range files {
+		if f.IsDir() {
+			// files first
+			continue
+		}
+		ffname := dir + "/" + f.Name()
+		fmt.Printf("Uploading file %s...\n", ffname)
+		err := upload_file(srv, ffname)
+		if err != nil {
+			return err
+		}
+	}
+	for _, f := range files {
+		if !f.IsDir() {
+			// dirs only
+			continue
+		}
+		ffname := dir + "/" + f.Name()
+		err := upload_dir(srv, ffname)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func upload_file(srv ba.BuildRepoArchive_UploadClient, filename string) error {
+	f, err := os.Open("/srv/build-repository/" + filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	buf := make([]byte, 1024)
+	for {
+		n, err := f.Read(buf)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		upr := &ba.UploadRequest{
+			Filename: filename,
+			Data:     buf[:n],
+		}
+		err = srv.Send(upr)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

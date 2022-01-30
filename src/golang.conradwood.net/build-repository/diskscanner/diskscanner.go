@@ -191,6 +191,6 @@ func (d *DiskScanner) calc() (*BuildDir, error) {
 }
 
 func sync_to_archive(v *Version) error {
-	fmt.Printf("[diskscanner] syncing %s, %s, %s\n", v.branch.repo.builddir.root, v.branch.repo.name, v.branch.name)
+	fmt.Printf("[diskscanner] syncing %s, %s, %s, version=%d\n", v.branch.repo.builddir.root, v.branch.repo.name, v.branch.name, v.version)
 	return nil
 }

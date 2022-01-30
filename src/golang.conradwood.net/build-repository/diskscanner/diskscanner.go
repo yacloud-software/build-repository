@@ -108,11 +108,13 @@ func (d *DiskScanner) find() {
 				break
 			}
 			fmt.Printf("[diskscanner] %3d. Version %d in %s (%v) (size=%dGb)\n", i, v.version, v.Path(), v.Created(), d.Builds.Size()/1024/1024/1024)
-			err = os.RemoveAll(v.Path())
-			if err != nil {
-				fmt.Printf("[diskscanner] Failed to remove version (%s): %s", v.Path(), err)
-				continue
-			}
+			/*
+				err = os.RemoveAll(v.Path())
+				if err != nil {
+					fmt.Printf("[diskscanner] Failed to remove version (%s): %s", v.Path(), err)
+					continue
+				}
+			*/
 			v.deleted = true
 		}
 	}

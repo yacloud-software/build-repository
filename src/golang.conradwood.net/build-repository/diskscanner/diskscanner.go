@@ -12,6 +12,7 @@ import (
 )
 
 var (
+	do_remove   = flag.Bool("do_remove", false, "if true actually delete archived stuff")
 	debug       = flag.Bool("diskscanner_debug", false, "diskscanner debug mode")
 	backup      = flag.Bool("diskscanner_backup", true, "run backups of everything regularly and prior to archiving")
 	sleep       = flag.Int("diskscanner_sleep", 60, "amount of `seconds` between checks of diskspace")
@@ -108,14 +109,14 @@ func (d *DiskScanner) find() {
 				break
 			}
 			fmt.Printf("[diskscanner] %3d. Version %d in %s (%v) (size=%dGb)\n", i, v.version, v.Path(), v.Created(), d.Builds.Size()/1024/1024/1024)
-			/*
+			if *do_remove {
 				err = os.RemoveAll(v.Path())
 				if err != nil {
 					fmt.Printf("[diskscanner] Failed to remove version (%s): %s", v.Path(), err)
 					continue
 				}
-			*/
-			v.deleted = true
+				v.deleted = true
+			}
 		}
 	}
 }

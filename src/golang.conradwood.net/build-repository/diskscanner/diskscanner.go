@@ -16,7 +16,7 @@ import (
 
 var (
 	domain_id   = flag.String("domain_id", "default_buildrepo_service", "domain id for buildrepo")
-	do_remove   = flag.Bool("do_remove", false, "if true actually delete archived stuff")
+	do_remove   = flag.Bool("do_remove", true, "if true actually delete archived stuff")
 	debug       = flag.Bool("diskscanner_debug", false, "diskscanner debug mode")
 	backup      = flag.Bool("diskscanner_backup", true, "run backups of everything regularly and prior to archiving")
 	sleep       = flag.Int("diskscanner_sleep", 60, "amount of `seconds` between checks of diskspace")
@@ -212,7 +212,7 @@ func sync_to_archive(v *Version) error {
 		fmt.Sprintf("metadata/%s/%s/%d", v.branch.repo.name, v.branch.name, v.version),
 	}
 	for _, local_dir := range dirs {
-		fmt.Printf("[diskscanner] Uploading %s...\n", local_dir)
+		// fmt.Printf("[diskscanner] Uploading %s...\n", local_dir)
 
 		err = upload_dir(srv, local_dir)
 		if err != nil {
@@ -229,14 +229,16 @@ func sync_to_archive(v *Version) error {
 }
 func upload_dir(srv ba.BuildRepoArchive_UploadClient, dir string) error {
 	files, err := ioutil.ReadDir("/srv/build-repository/" + dir)
-	utils.Bail("failed to read dir", err)
+	if err != nil {
+		return err
+	}
 	for _, f := range files {
 		if f.IsDir() {
 			// files first
 			continue
 		}
 		ffname := dir + "/" + f.Name()
-		fmt.Printf("Uploading file %s...\n", ffname)
+		//fmt.Printf("Uploading file %s...\n", ffname)
 		err := upload_file(srv, ffname)
 		if err != nil {
 			return err

@@ -21,6 +21,7 @@ var (
 	backup      = flag.Bool("diskscanner_backup", true, "run backups of everything regularly and prior to archiving")
 	sleep       = flag.Int("diskscanner_sleep", 60, "amount of `seconds` between checks of diskspace")
 	max_runtime = flag.Int("diskscanner_max_runtime", 600, "amount of `seconds` before rsync is forcibly killed")
+	do_enable   = flag.Bool("diskscanner_enable", true, "if false, do not run diskscanner")
 	unclean     = true
 )
 
@@ -71,6 +72,9 @@ func (d *DiskScanner) find() {
 	for {
 		d.running = false
 		<-d.ch
+		if !*do_enable {
+			continue
+		}
 		d.running = true
 		if d.Dir == "" {
 			fmt.Printf("[diskscanner] No dir set!\n")

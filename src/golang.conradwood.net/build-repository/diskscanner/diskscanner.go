@@ -23,6 +23,7 @@ var (
 	max_runtime = flag.Int("diskscanner_max_runtime", 600, "amount of `seconds` before rsync is forcibly killed")
 	do_enable   = flag.Bool("diskscanner_enable", true, "if false, do not run diskscanner")
 	unclean     = true
+	sl          = utils.NewSlidingAverage()
 )
 
 type DiskScanner struct {
@@ -39,9 +40,12 @@ func NewDiskScanner() *DiskScanner {
 	res := &DiskScanner{
 		ch:      make(chan int, 100),
 		MaxSize: 1024 * 100, // max 100G
-		sl:      utils.NewSlidingAverage(),
 	}
 	return res
+}
+func printRate() {
+	r := float64(sl.GetCounter(1)) / float64(sl.GetCounter(0)) * 100
+	fmt.Printf("Total syncs: %d, Failed syncs: %d, Percent:%0.2f\n", sl.GetCounter(0), sl.GetCounter(1), r)
 }
 func (d *DiskScanner) Start() {
 	d.Trigger()
@@ -114,14 +118,13 @@ func (d *DiskScanner) find() {
 				break
 			}
 			err = sync_to_archive(v)
-			d.sl.Add(0, 1)
+			sl.Add(0, 1)
 			if err != nil {
-				d.sl.Add(1, 1)
+				sl.Add(1, 1)
 				fmt.Printf("Error syncing: %s\n", utils.ErrorString(err))
 				break
 			}
-			r := float64(d.sl.GetCounter(1)) / float64(d.sl.GetCounter(0)) * 100
-			fmt.Printf("Total syncs: %d, Failed syncs: %d, Percent:%0.2f\n", d.sl.GetCounter(0), d.sl.GetCounter(1), r)
+			printRate()
 			fmt.Printf("[diskscanner] %3d. Version %d in %s (%v) (size=%dGb)\n", i, v.version, v.Path(), v.Created(), d.Builds.Size()/1024/1024/1024)
 			if *do_remove {
 				err = os.RemoveAll(v.Path())
@@ -132,8 +135,7 @@ func (d *DiskScanner) find() {
 				v.deleted = true
 			}
 		}
-		r := float64(d.sl.GetCounter(1)) / float64(d.sl.GetCounter(0)) * 100
-		fmt.Printf("Total syncs: %d, Failed syncs: %d, Percent:%0.2f\n", d.sl.GetCounter(0), d.sl.GetCounter(1), r)
+		printRate()
 
 	}
 }

@@ -132,6 +132,8 @@ func (d *DiskScanner) find() {
 				v.deleted = true
 			}
 		}
+		fmt.Printf("Total syncs: %i, Failed syncs: %i, Percent:%0.2f\n", d.sl.GetCounter(0), d.sl.GetCounter(1), r)
+
 	}
 }
 

@@ -121,7 +121,7 @@ func (d *DiskScanner) find() {
 				break
 			}
 			r := float64(d.sl.GetCounter(1)) / float64(d.sl.GetCounter(0)) * 100
-			fmt.Printf("Total syncs: %i, Failed syncs: %i, Percent:%0.2f\n", d.sl.GetCounter(0), d.sl.GetCounter(1), r)
+			fmt.Printf("Total syncs: %d, Failed syncs: %d, Percent:%0.2f\n", d.sl.GetCounter(0), d.sl.GetCounter(1), r)
 			fmt.Printf("[diskscanner] %3d. Version %d in %s (%v) (size=%dGb)\n", i, v.version, v.Path(), v.Created(), d.Builds.Size()/1024/1024/1024)
 			if *do_remove {
 				err = os.RemoveAll(v.Path())
@@ -133,7 +133,7 @@ func (d *DiskScanner) find() {
 			}
 		}
 		r := float64(d.sl.GetCounter(1)) / float64(d.sl.GetCounter(0)) * 100
-		fmt.Printf("Total syncs: %i, Failed syncs: %i, Percent:%0.2f\n", d.sl.GetCounter(0), d.sl.GetCounter(1), r)
+		fmt.Printf("Total syncs: %d, Failed syncs: %d, Percent:%0.2f\n", d.sl.GetCounter(0), d.sl.GetCounter(1), r)
 
 	}
 }

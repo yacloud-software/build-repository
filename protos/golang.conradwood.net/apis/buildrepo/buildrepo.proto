@@ -204,4 +204,6 @@ service BuildRepoManager {
   rpc DoesFileExist(GetFileRequest) returns (FileExistsInfo);
   // get some metadata about an artefact (which this is, it is not a repository)
   rpc GetRepositoryMeta(GetRepoMetaRequest) returns (RepoMetaInfo);
+  // unfail the diskscanner (it goes into fail mode if 100% of syncs fail for too long)
+  rpc UnfailDiskScanner(common.Void)returns(common.Void);
 }

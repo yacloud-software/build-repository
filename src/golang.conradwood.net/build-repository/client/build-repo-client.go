@@ -21,6 +21,7 @@ import (
 
 // static variables for flag parser
 var (
+	do_unfail   = flag.Bool("unfail", false, "if true, unfail diskscanner")
 	tooldir     = flag.String("tooldir", "", "The location of directory to download tools to (overwrites existing files!).")
 	artefact    = flag.String("artefact", "", "Fetch a specific artefact (use with tooldir)")
 	gitlabUser  = flag.String("user", "", "The GitLab user.")
@@ -58,6 +59,12 @@ func main() {
 	flag.Parse()
 	grpcClient = buildrepo.GetBuildRepoManagerClient()
 
+	if *do_unfail {
+		_, err := grpcClient.UnfailDiskScanner(createContext(), &common.Void{})
+		utils.Bail("failed to unfail", err)
+		fmt.Printf("Unfailed\n")
+		os.Exit(0)
+	}
 	if *reserve {
 		ReserveBuildNumber()
 		os.Exit(0)

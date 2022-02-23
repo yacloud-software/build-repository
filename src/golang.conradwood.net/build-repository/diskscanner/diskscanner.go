@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"golang.conradwood.net/go-easyops/authremote"
 	"golang.conradwood.net/go-easyops/linux"
+	"golang.conradwood.net/go-easyops/prometheus"
 	"golang.conradwood.net/go-easyops/utils"
 	ba "golang.yacloud.eu/apis/buildrepoarchive"
 	"io"
@@ -15,16 +16,46 @@ import (
 )
 
 var (
-	domain_id   = flag.String("domain_id", "default_buildrepo_service", "domain id for buildrepo")
-	do_remove   = flag.Bool("do_remove", true, "if true actually delete archived stuff")
-	debug       = flag.Bool("diskscanner_debug", false, "diskscanner debug mode")
-	backup      = flag.Bool("diskscanner_backup", true, "run backups of everything regularly and prior to archiving")
-	sleep       = flag.Int("diskscanner_sleep", 60, "amount of `seconds` between checks of diskspace")
-	max_runtime = flag.Int("diskscanner_max_runtime", 600, "amount of `seconds` before rsync is forcibly killed")
-	do_enable   = flag.Bool("diskscanner_enable", true, "if false, do not run diskscanner")
-	unclean     = true
-	sl          = utils.NewSlidingAverage()
+	domain_id      = flag.String("domain_id", "default_buildrepo_service", "domain id for buildrepo")
+	do_remove      = flag.Bool("do_remove", true, "if true actually delete archived stuff")
+	debug          = flag.Bool("diskscanner_debug", false, "diskscanner debug mode")
+	backup         = flag.Bool("diskscanner_backup", true, "run backups of everything regularly and prior to archiving")
+	sleep          = flag.Int("diskscanner_sleep", 60, "amount of `seconds` between checks of diskspace")
+	sleep_fail     = flag.Duration("diskscanner_sleep_fail", time.Duration(60)*time.Minute, "sleep  between checks of diskspace, in fail mode")
+	max_runtime    = flag.Int("diskscanner_max_runtime", 600, "amount of `seconds` before rsync is forcibly killed")
+	do_enable      = flag.Bool("diskscanner_enable", true, "if false, do not run diskscanner")
+	unclean        = true
+	sl             = utils.NewSlidingAverage()
+	fail_mode      = false // if true, sleep a long time and be unhappy
+	prom_fail_mode = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "buildrepo_diskscanner_fail_mode",
+			Help: "V=1 UNIT=none DESC=gauge indicating if in failmode",
+		},
+	)
+	prom_disk_size = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "buildrepo_diskscanner_size",
+			Help: "V=1 UNIT=decbytes DESC=gauge indicating size of archive",
+		},
+	)
+	prom_syncs = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "buildrepo_diskscanner_total_syncs",
+			Help: "V=1 UNIT=none DESC=total sync attempts",
+		},
+	)
+	prom_sync_fails = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "buildrepo_diskscanner_failed_syncs",
+			Help: "V=1 UNIT=none DESC=total failed attempts",
+		},
+	)
 )
+
+func init() {
+	prometheus.MustRegister(prom_fail_mode, prom_disk_size, prom_syncs, prom_sync_fails)
+}
 
 type DiskScanner struct {
 	lastRun time.Time
@@ -51,10 +82,45 @@ func (d *DiskScanner) Start() {
 	d.Trigger()
 	go d.loop()
 }
+func (d *DiskScanner) Unfail() {
+	if fail_mode {
+		fmt.Printf("[diskscanner] unfailed by user\n")
+	} else {
+		fmt.Printf("[diskscanner] user request to unfail, but not in fail_mode\n")
+	}
+	fail_mode = false
+}
+func sleep_while_fail() {
+	if !fail_mode {
+		return
+	}
+	started := time.Now()
+	for {
+		fmt.Printf("[diskscanner] diskscanner failed. fail_sleep_mode\n")
+		time.Sleep(time.Duration(10) * time.Second)
+		dur := time.Since(started)
+		if dur > *sleep_fail {
+			break
+		}
+		if !fail_mode {
+			break
+		}
+	}
+}
+
 func (d *DiskScanner) loop() {
 	go d.find()
 	for {
 		time.Sleep(time.Duration(*sleep) * time.Second)
+		sleep_while_fail()
+		if sl.GetCounter(1) == sl.GetCounter(0) && sl.GetCounter(0) > 0 {
+			fail_mode = true
+			prom_fail_mode.Set(1)
+		} else {
+			prom_fail_mode.Set(0)
+			fail_mode = false
+		}
+
 		if len(d.ch) > 0 && d.running {
 			continue
 		}
@@ -106,6 +172,7 @@ func (d *DiskScanner) find() {
 				fmt.Printf("[diskscanner] Repo: %s (%d branches, %d versions, %16d bytes)\n", b.name, len(b.branches), len(b.Versions()), b.Size())
 			}
 		}
+		prom_disk_size.Set(float64(d.Builds.Size()))
 		maxBytes := uint64(d.MaxSize * 1024 * 1024)
 		if d.Builds.Size() < maxBytes {
 			continue
@@ -117,9 +184,11 @@ func (d *DiskScanner) find() {
 			if d.Builds.Size() < maxBytes {
 				break
 			}
+			prom_syncs.Inc()
 			err = sync_to_archive(v)
 			sl.Add(0, 1)
 			if err != nil {
+				prom_sync_fails.Inc()
 				sl.Add(1, 1)
 				fmt.Printf("Error syncing: %s\n", utils.ErrorString(err))
 				break
@@ -245,7 +314,12 @@ func sync_to_archive(v *Version) error {
 	return nil
 }
 func upload_dir(srv ba.BuildRepoArchive_UploadClient, dir string) error {
-	files, err := ioutil.ReadDir("/srv/build-repository/" + dir)
+	fdir := "/srv/build-repository/" + dir
+	sym, err := isSymLink(fdir)
+	if err != nil || sym {
+		return err
+	}
+	files, err := ioutil.ReadDir(fdir)
 	if err != nil {
 		fmt.Printf("[diskscanner] readdir \"%s\" failed: %s\n", dir, err)
 		return err
@@ -269,6 +343,7 @@ func upload_dir(srv ba.BuildRepoArchive_UploadClient, dir string) error {
 			continue
 		}
 		ffname := dir + "/" + f.Name()
+
 		err := upload_dir(srv, ffname)
 		if err != nil {
 			fmt.Printf("[diskscanner] upload of dir \"%s\" failed: %s\n", ffname, err)
@@ -277,11 +352,29 @@ func upload_dir(srv ba.BuildRepoArchive_UploadClient, dir string) error {
 	}
 	return nil
 }
-
-func upload_file(srv ba.BuildRepoArchive_UploadClient, filename string) error {
-	f, err := os.Open("/srv/build-repository/" + filename)
+func isSymLink(filename string) (bool, error) {
+	// if file is a symlink, don't sync it
+	fileInfo, err := os.Lstat(filename)
 	if err != nil {
-		fmt.Printf("[diskscanner] open() of file \"%s\" failed: %s\n", filename, err)
+		fmt.Printf("[diskscanner] stat() of file \"%s\" failed: %s\n", filename, err)
+		return false, err
+	}
+
+	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
+		fmt.Println("File %s is a symbolic link, skipped.", filename)
+		return true, nil
+	}
+	return false, nil
+}
+func upload_file(srv ba.BuildRepoArchive_UploadClient, filename string) error {
+	fullfile := "/srv/build-repository/" + filename
+	sym, err := isSymLink(fullfile)
+	if err != nil || sym {
+		return err
+	}
+	f, err := os.Open(fullfile)
+	if err != nil {
+		fmt.Printf("[diskscanner] open() of file \"%s\" failed: %s\n", fullfile, err)
 		return err
 	}
 	defer f.Close()

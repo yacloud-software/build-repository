@@ -216,11 +216,13 @@ func sync_to_archive(v *Version) error {
 
 		err = upload_dir(srv, local_dir)
 		if err != nil {
+			fmt.Printf("[diskscanner] Upload dir %s failed: %s\n", local_dir, utils.ErrorString(err))
 			return err
 		}
 	}
 	_, err = srv.CloseAndRecv()
 	if err != io.EOF {
+		fmt.Printf("[diskscanner] closeandrecv() failed: %s\n", utils.ErrorString(err))
 		return err
 	}
 
@@ -230,6 +232,7 @@ func sync_to_archive(v *Version) error {
 func upload_dir(srv ba.BuildRepoArchive_UploadClient, dir string) error {
 	files, err := ioutil.ReadDir("/srv/build-repository/" + dir)
 	if err != nil {
+		fmt.Printf("[diskscanner] readdir \"%s\" failed: %s\n", dir, err)
 		return err
 	}
 	for _, f := range files {
@@ -241,6 +244,7 @@ func upload_dir(srv ba.BuildRepoArchive_UploadClient, dir string) error {
 		//fmt.Printf("Uploading file %s...\n", ffname)
 		err := upload_file(srv, ffname)
 		if err != nil {
+			fmt.Printf("[diskscanner] upload of file \"%s\" failed: %s\n", ffname, err)
 			return err
 		}
 	}
@@ -252,6 +256,7 @@ func upload_dir(srv ba.BuildRepoArchive_UploadClient, dir string) error {
 		ffname := dir + "/" + f.Name()
 		err := upload_dir(srv, ffname)
 		if err != nil {
+			fmt.Printf("[diskscanner] upload of dir \"%s\" failed: %s\n", ffname, err)
 			return err
 		}
 	}
@@ -261,6 +266,7 @@ func upload_dir(srv ba.BuildRepoArchive_UploadClient, dir string) error {
 func upload_file(srv ba.BuildRepoArchive_UploadClient, filename string) error {
 	f, err := os.Open("/srv/build-repository/" + filename)
 	if err != nil {
+		fmt.Printf("[diskscanner] open() of file \"%s\" failed: %s\n", filename, err)
 		return err
 	}
 	defer f.Close()
@@ -271,6 +277,7 @@ func upload_file(srv ba.BuildRepoArchive_UploadClient, filename string) error {
 			break
 		}
 		if err != nil {
+			fmt.Printf("[diskscanner] read() of file \"%s\" failed: %s\n", filename, err)
 			return err
 		}
 		upr := &ba.UploadRequest{
@@ -279,6 +286,7 @@ func upload_file(srv ba.BuildRepoArchive_UploadClient, filename string) error {
 		}
 		err = srv.Send(upr)
 		if err != nil {
+			fmt.Printf("[diskscanner] send() of file \"%s\" failed: %s\n", filename, err)
 			return err
 		}
 	}

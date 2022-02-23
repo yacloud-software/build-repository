@@ -132,6 +132,7 @@ func (d *DiskScanner) find() {
 				v.deleted = true
 			}
 		}
+		r := float64(d.sl.GetCounter(1)) / float64(d.sl.GetCounter(0)) * 100
 		fmt.Printf("Total syncs: %i, Failed syncs: %i, Percent:%0.2f\n", d.sl.GetCounter(0), d.sl.GetCounter(1), r)
 
 	}

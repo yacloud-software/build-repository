@@ -197,7 +197,7 @@ func (d *DiskScanner) calc() (*BuildDir, error) {
 func sync_to_archive(v *Version) error {
 	bc := ba.GetBuildRepoArchiveClient()
 	key := fmt.Sprintf("%s/%s/%d", v.branch.repo.name, v.branch.name, v.version)
-	ctx := authremote.Context()
+	ctx := authremote.ContextWithTimeout(time.Duration(60) * time.Second)
 	srv, err := bc.Upload(ctx)
 	if err != nil {
 		return err

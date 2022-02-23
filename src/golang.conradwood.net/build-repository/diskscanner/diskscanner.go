@@ -31,12 +31,14 @@ type DiskScanner struct {
 	MaxSize int64 // MegaBytes
 	ch      chan int
 	Builds  *BuildDir
+	sl      *utils.SlidingAverage
 }
 
 func NewDiskScanner() *DiskScanner {
 	res := &DiskScanner{
 		ch:      make(chan int, 100),
 		MaxSize: 1024 * 100, // max 100G
+		sl:      utils.NewSlidingAverage(),
 	}
 	return res
 }
@@ -108,10 +110,14 @@ func (d *DiskScanner) find() {
 				break
 			}
 			err = sync_to_archive(v)
+			d.sl.Add(0, 1)
 			if err != nil {
+				d.sl.Add(1, 1)
 				fmt.Printf("Error syncing: %s\n", utils.ErrorString(err))
 				break
 			}
+			r := float64(d.sl.GetCounter(1)) / float64(d.sl.GetCounter(0)) * 100
+			fmt.Printf("Total syncs: %i, Failed syncs: %i, Percent:%0.2f\n", d.sl.GetCounter(0), d.sl.GetCounter(1), r)
 			fmt.Printf("[diskscanner] %3d. Version %d in %s (%v) (size=%dGb)\n", i, v.version, v.Path(), v.Created(), d.Builds.Size()/1024/1024/1024)
 			if *do_remove {
 				err = os.RemoveAll(v.Path())

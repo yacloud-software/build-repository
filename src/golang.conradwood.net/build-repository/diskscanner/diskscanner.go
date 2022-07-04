@@ -361,7 +361,7 @@ func isSymLink(filename string) (bool, error) {
 	}
 
 	if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
-		fmt.Println("File %s is a symbolic link, skipped.", filename)
+		fmt.Printf("File %s is a symbolic link, skipped.\n", filename)
 		return true, nil
 	}
 	return false, nil

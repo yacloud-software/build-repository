@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
+	pb "golang.conradwood.net/apis/buildrepo"
 	"io"
 	"os"
-
-	pb "golang.conradwood.net/apis/buildrepo"
 )
 
 // GetFileAsStream : stream the requested file to the client
@@ -39,6 +38,9 @@ func (brs *BuildRepoServer) GetFileAsStream(req *pb.GetFileRequest, s pb.BuildRe
 			return fmt.Errorf("could not read file: %v", err)
 		}
 
-		_ = s.Send(&pb.FileBlock{Size: uint64(size), Data: data})
+		err = s.Send(&pb.FileBlock{Size: uint64(size), Data: data})
+		if err != nil {
+			return err
+		}
 	}
 }

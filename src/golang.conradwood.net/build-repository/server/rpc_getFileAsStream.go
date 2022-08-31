@@ -38,7 +38,7 @@ func (brs *BuildRepoServer) GetFileAsStream(req *pb.GetFileRequest, s pb.BuildRe
 			return fmt.Errorf("could not read file: %v", err)
 		}
 
-		err = s.Send(&pb.FileBlock{Size: uint64(size), Data: data})
+		err = s.Send(&pb.FileBlock{Size: uint64(size), Data: data[:size]})
 		if err != nil {
 			return err
 		}

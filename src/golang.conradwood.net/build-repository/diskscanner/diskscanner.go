@@ -16,18 +16,19 @@ import (
 )
 
 var (
-	domain_id      = flag.String("domain_id", "default_buildrepo_service", "domain id for buildrepo")
-	do_remove      = flag.Bool("do_remove", true, "if true actually delete archived stuff")
-	debug          = flag.Bool("diskscanner_debug", false, "diskscanner debug mode")
-	backup         = flag.Bool("diskscanner_backup", true, "run backups of everything regularly and prior to archiving")
-	sleep          = flag.Int("diskscanner_sleep", 60, "amount of `seconds` between checks of diskspace")
-	sleep_fail     = flag.Duration("diskscanner_sleep_fail", time.Duration(60)*time.Minute, "sleep  between checks of diskspace, in fail mode")
-	max_runtime    = flag.Int("diskscanner_max_runtime", 600, "amount of `seconds` before rsync is forcibly killed")
-	do_enable      = flag.Bool("diskscanner_enable", true, "if false, do not run diskscanner")
-	unclean        = true
-	sl             = utils.NewSlidingAverage()
-	fail_mode      = false // if true, sleep a long time and be unhappy
-	prom_fail_mode = prometheus.NewGauge(
+	archive_timeout = flag.Duration("archive_timeout", time.Duration(120)*time.Second, "max runtime of the copy to archive upload")
+	domain_id       = flag.String("domain_id", "default_buildrepo_service", "domain id for buildrepo")
+	do_remove       = flag.Bool("do_remove", true, "if true actually delete archived stuff")
+	debug           = flag.Bool("diskscanner_debug", false, "diskscanner debug mode")
+	backup          = flag.Bool("diskscanner_backup", true, "run backups of everything regularly and prior to archiving")
+	sleep           = flag.Int("diskscanner_sleep", 60, "amount of `seconds` between checks of diskspace")
+	sleep_fail      = flag.Duration("diskscanner_sleep_fail", time.Duration(60)*time.Minute, "sleep  between checks of diskspace, in fail mode")
+	max_runtime     = flag.Int("diskscanner_max_runtime", 600, "amount of `seconds` before rsync is forcibly killed")
+	do_enable       = flag.Bool("diskscanner_enable", true, "if false, do not run diskscanner")
+	unclean         = true
+	sl              = utils.NewSlidingAverage()
+	fail_mode       = false // if true, sleep a long time and be unhappy
+	prom_fail_mode  = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "buildrepo_diskscanner_fail_mode",
 			Help: "V=1 UNIT=none DESC=gauge indicating if in failmode",
@@ -281,7 +282,7 @@ func (d *DiskScanner) calc() (*BuildDir, error) {
 func sync_to_archive(v *Version) error {
 	bc := ba.GetBuildRepoArchiveClient()
 	key := fmt.Sprintf("%s/%s/%d", v.branch.repo.name, v.branch.name, v.version)
-	ctx := authremote.ContextWithTimeout(time.Duration(60) * time.Second)
+	ctx := authremote.ContextWithTimeout(*archive_timeout)
 	srv, err := bc.Upload(ctx)
 	if err != nil {
 		return err

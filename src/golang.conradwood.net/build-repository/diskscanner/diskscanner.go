@@ -305,10 +305,14 @@ func sync_to_archive(v *Version) error {
 			return err
 		}
 	}
-	_, err = srv.CloseAndRecv()
-	if err != io.EOF {
+	ack, err := srv.CloseAndRecv()
+	if err != nil && err != io.EOF {
 		fmt.Printf("[diskscanner] closeandrecv() failed: %s\n", utils.ErrorString(err))
 		return err
+	}
+	if !ack.Success {
+		fmt.Printf("[diskscanner] archiver n'acked receipt\n")
+		return fmt.Errorf("archiver n'acked receipt\n")
 	}
 
 	fmt.Printf("[diskscanner] syncing %s, %s, %s, version=%d\n", v.branch.repo.builddir.root, v.branch.repo.name, v.branch.name, v.version)

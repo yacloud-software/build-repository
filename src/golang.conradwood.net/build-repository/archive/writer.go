@@ -11,6 +11,7 @@ type writer struct {
 	cur_filename string
 	targetdir    string
 	cur_file     *os.File
+	bytes        uint64
 }
 
 func (w *writer) NewFile(filename string) error {
@@ -21,6 +22,7 @@ func (w *writer) NewFile(filename string) error {
 	if err != nil {
 		return err
 	}
+	w.bytes = 0
 	w.cur_filename = filename
 	fullfile := w.targetdir + filename
 	p := filepath.Dir(fullfile)
@@ -46,13 +48,14 @@ func (w *writer) Write(buf []byte) error {
 	if n != len(buf) {
 		return fmt.Errorf("write error: %d != %d", len(buf), n)
 	}
+	w.bytes = w.bytes + uint64(len(buf))
 	return nil
 }
 func (w *writer) Close() error {
 	if w.cur_file == nil {
 		return nil
 	}
-	fmt.Printf("Closed \"%s\"\n", w.cur_filename)
+	fmt.Printf("Closed \"%s\" (%d bytes)\n", w.cur_filename, w.bytes)
 	err := w.cur_file.Close()
 	if err != nil {
 		return err

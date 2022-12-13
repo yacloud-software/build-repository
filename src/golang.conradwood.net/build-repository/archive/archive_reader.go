@@ -19,6 +19,9 @@ func Retrieve(ctx context.Context, file *buildrepo.File, targetdir string) error
 	key := fmt.Sprintf("%s/%s/%d", file.Repository, file.Branch, file.BuildID)
 	retriever := &Retriever{DomainID: domain, Key: key}
 	err := retriever.Retrieve(ctx, targetdir)
+	if err != nil {
+		retriever.Printf("retriever failed: %s\n", err)
+	}
 	fmt.Printf("Set marker to %s\n", targetdir)
 	return err
 }

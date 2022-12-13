@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"golang.conradwood.net/build-repository/archive"
+	"golang.conradwood.net/build-repository/globals"
 	"golang.conradwood.net/go-easyops/authremote"
 	"golang.conradwood.net/go-easyops/linux"
 	"golang.conradwood.net/go-easyops/prometheus"
@@ -147,6 +148,10 @@ func (d *DiskScanner) find() {
 			continue
 		}
 		d.running = true
+		// do not run in the 45 seconds after an upload was completed.
+		for time.Since(globals.LastUploadCompleted()) < time.Duration(45)*time.Second {
+			time.Sleep(time.Duration(3) * time.Second)
+		}
 		if d.Dir == "" {
 			fmt.Printf("[diskscanner] No dir set!\n")
 			continue

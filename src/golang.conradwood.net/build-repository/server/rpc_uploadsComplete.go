@@ -8,6 +8,7 @@ import (
 	pb "golang.conradwood.net/apis/buildrepo"
 	dm "golang.conradwood.net/apis/deployminator"
 	sb "golang.conradwood.net/apis/slackgateway"
+	"golang.conradwood.net/build-repository/globals"
 	"golang.conradwood.net/go-easyops/authremote"
 	"golang.conradwood.net/go-easyops/client"
 	cl "golang.conradwood.net/go-easyops/cmdline"
@@ -59,7 +60,8 @@ func (brs *BuildRepoServer) UploadsComplete(ctx context.Context, udr *pb.UploadD
 		resp.Closed = true
 		return resp, nil
 	}
-	diskScanner.Trigger() // trigger diskscanner (backups)
+	globals.UploadCompleted()
+	diskScanner.Trigger()
 	_, err = runHook(store)
 	if err != nil {
 		fmt.Printf("Failed to run hook: %s\n", err)

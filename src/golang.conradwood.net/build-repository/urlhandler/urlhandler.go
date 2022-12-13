@@ -37,6 +37,15 @@ func NewDownloadStreamForURL(ctx context.Context, url string) (DownloadReader, e
 		return nil, err
 	}
 	gfr := res.parsedurl.ToGetFileRequest()
+	// does it exist??
+	er, err := bs.DoesFileExist(ctx, gfr)
+	if err != nil {
+		return nil, err
+	}
+	if !er.Exists {
+		return nil, fmt.Errorf("file %s not found", url)
+	}
+	// yes->create stream
 	res.stream, err = bs.GetFileAsStream(ctx, gfr)
 	if err != nil {
 		return nil, err

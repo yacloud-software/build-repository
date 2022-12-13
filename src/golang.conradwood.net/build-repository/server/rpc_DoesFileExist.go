@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	pb "golang.conradwood.net/apis/buildrepo"
+	"golang.conradwood.net/build-repository/archive"
 	"golang.conradwood.net/go-easyops/utils"
 )
 
@@ -12,11 +13,21 @@ func (b *BuildRepoServer) DoesFileExist(ctx context.Context, req *pb.GetFileRequ
 	filename, err := toLinuxFilename(req.File)
 
 	if err != nil {
-		return nil, fmt.Errorf("could not get filename: %v", err)
+		return nil, err
 	}
-	res := &pb.FileExistsInfo{
-		Exists: utils.FileExists(filename),
+
+	if utils.FileExists(filename) {
+		return &pb.FileExistsInfo{Exists: true}, nil
 	}
-	return res, nil
+
+	// perhaps it is in archive?
+	fr, err := archive.DoesFileExist(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	if fr.Exists {
+		return &pb.FileExistsInfo{Exists: true}, nil
+	}
+	return nil, fmt.Errorf("could not get filename: %v", err)
 
 }

@@ -3,6 +3,7 @@ package diskscanner
 import (
 	"flag"
 	"fmt"
+	"golang.conradwood.net/build-repository/archive"
 	"golang.conradwood.net/go-easyops/authremote"
 	"golang.conradwood.net/go-easyops/linux"
 	"golang.conradwood.net/go-easyops/prometheus"
@@ -17,7 +18,6 @@ import (
 
 var (
 	archive_timeout = flag.Duration("archive_timeout", time.Duration(120)*time.Second, "max runtime of the copy to archive upload")
-	domain_id       = flag.String("domain_id", "default_buildrepo_service", "domain id for buildrepo")
 	do_remove       = flag.Bool("do_remove", true, "if true actually delete archived stuff")
 	debug           = flag.Bool("diskscanner_debug", false, "diskscanner debug mode")
 	backup          = flag.Bool("diskscanner_backup", true, "run backups of everything regularly and prior to archiving")
@@ -287,7 +287,7 @@ func sync_to_archive(v *Version) error {
 	if err != nil {
 		return err
 	}
-	err = srv.Send(&ba.UploadRequest{DomainID: *domain_id, Key: key})
+	err = srv.Send(&ba.UploadRequest{DomainID: archive.GetDomainID(), Key: key})
 	if err != nil {
 		return err
 	}
@@ -315,7 +315,7 @@ func sync_to_archive(v *Version) error {
 		return fmt.Errorf("archiver n'acked receipt\n")
 	}
 
-	fmt.Printf("[diskscanner] syncing %s, %s, %s, version=%d\n", v.branch.repo.builddir.root, v.branch.repo.name, v.branch.name, v.version)
+	fmt.Printf("[diskscanner] synced %s, %s, %s, version=%d\n", v.branch.repo.builddir.root, v.branch.repo.name, v.branch.name, v.version)
 	return nil
 }
 func upload_dir(srv ba.BuildRepoArchive_UploadClient, dir string) error {

@@ -28,6 +28,7 @@ const (
 
 // static variables
 var (
+	url            = flag.String("download", "", "if non empty, and a valid buildrepo url, then this will download a file")
 	default_domain = flag.String("default_domain", "", "default domain for this build repository")
 	maxsize        = flag.Int("max_gb", 1000, "max gigabyte the repository may grow")
 	port           = flag.Int("port", 5004, "The server port")

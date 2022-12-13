@@ -21,6 +21,7 @@ import (
 
 // static variables for flag parser
 var (
+	download    = flag.String("download", "", "if non empty, and a valid buildrepo url, then this will download a file")
 	do_unfail   = flag.Bool("unfail", false, "if true, unfail diskscanner")
 	tooldir     = flag.String("tooldir", "", "The location of directory to download tools to (overwrites existing files!).")
 	artefact    = flag.String("artefact", "", "Fetch a specific artefact (use with tooldir)")
@@ -57,6 +58,10 @@ func main() {
 	fmt.Println("Starting build-repository-client:", filepath.Dir(ex))
 
 	flag.Parse()
+	if *download != "" {
+		DownloadURL()
+		os.Exit(0)
+	}
 	grpcClient = buildrepo.GetBuildRepoManagerClient()
 
 	if *do_unfail {

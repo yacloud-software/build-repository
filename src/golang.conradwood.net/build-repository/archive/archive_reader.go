@@ -14,6 +14,9 @@ type Retriever struct {
 	Key      string
 }
 
+/*
+retrieve from objectarchive. this _must_ be externally synchronised
+*/
 func Retrieve(ctx context.Context, file *buildrepo.File, targetdir string) error {
 	domain := GetDomainID()
 	key := fmt.Sprintf("%s/%s/%d", file.Repository, file.Branch, file.BuildID)
@@ -32,6 +35,9 @@ func (r *Retriever) Retrieve(ctx context.Context, targetdir string) error {
 		DomainID: r.DomainID,
 		Key:      r.Key,
 	}
+	use_lock_key := dr.DomainID + "_" + dr.Key
+	lock_key(use_lock_key)
+	defer unlock_key(use_lock_key)
 	srv, err := barchive.GetBuildRepoArchiveClient().Download(ctx, dr)
 	if err != nil {
 		return err
@@ -76,4 +82,11 @@ func (r *Retriever) Printf(format string, args ...interface{}) {
 	}
 	s := fmt.Sprintf(format, args...)
 	fmt.Print(s)
+}
+
+func lock_key(key string) {
+	file_map_lock.Lock()
+}
+func unlock_key(key string) {
+	file_map_lock.Unlock()
 }

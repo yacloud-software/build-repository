@@ -3,8 +3,15 @@ package archive
 import (
 	"fmt"
 	"golang.conradwood.net/go-easyops/utils"
+	"golang.org/x/sys/unix"
 	"os"
 	"path/filepath"
+	"sync"
+)
+
+var (
+	file_lock     = make(map[string]*sync.Mutex)
+	file_map_lock sync.Mutex
 )
 
 type writer struct {
@@ -29,7 +36,9 @@ func (w *writer) NewFile(filename string) error {
 	if !utils.FileExists(p) {
 		os.MkdirAll(p, 0777)
 	}
-	f, err := utils.OpenWriteFile(fullfile)
+	unix.Umask(000)
+
+	f, err := os.OpenFile(fullfile, os.O_WRONLY|os.O_CREATE, 0666) // perhaps O_EXCL ?
 	if err != nil {
 		return err
 	}

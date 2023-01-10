@@ -84,9 +84,12 @@ func (r *Retriever) Printf(format string, args ...interface{}) {
 	fmt.Print(s)
 }
 
+// lock a single key (TODO: limit to a single key, it ignores keys and just locks atm)
 func lock_key(key string) {
 	file_map_lock.Lock()
 }
+
+// unlock a single key (TODO: limit to a single key, it ignores keys and just locks atm)
 func unlock_key(key string) {
 	file_map_lock.Unlock()
 }

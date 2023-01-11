@@ -12,7 +12,6 @@ import (
 	"golang.conradwood.net/go-easyops/authremote"
 	"golang.conradwood.net/go-easyops/client"
 	cl "golang.conradwood.net/go-easyops/cmdline"
-	"golang.conradwood.net/go-easyops/tokens"
 	"golang.conradwood.net/go-easyops/utils"
 	"io/ioutil"
 	"os"
@@ -231,7 +230,7 @@ func tellUsers(msg string) {
 	if slack == nil {
 		slack = sb.NewSlackGatewayClient(client.Connect("slackgateway.SlackGateway"))
 	}
-	ctx := tokens.ContextWithToken()
+	ctx := authremote.Context()
 	pm := &sb.PublishMessageRequest{OriginService: "originservicenotfilledinyet",
 		Channel: "deployments",
 		Text:    msg,

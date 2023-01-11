@@ -24,7 +24,7 @@ var (
 	backup          = flag.Bool("diskscanner_backup", true, "run backups of everything regularly and prior to archiving")
 	sleep           = flag.Int("diskscanner_sleep", 60, "amount of `seconds` between checks of diskspace")
 	sleep_fail      = flag.Duration("diskscanner_sleep_fail", time.Duration(60)*time.Minute, "sleep  between checks of diskspace, in fail mode")
-	max_runtime     = flag.Int("diskscanner_max_runtime", 600, "amount of `seconds` before rsync is forcibly killed")
+	max_runtime     = flag.Duration("diskscanner_max_runtime", time.Duration(600)*time.Second, "amount of `seconds` before rsync is forcibly killed")
 	do_enable       = flag.Bool("diskscanner_enable", true, "if false, do not run diskscanner")
 	unclean         = true
 	sl              = utils.NewSlidingAverage()
@@ -220,7 +220,7 @@ func (d *DiskScanner) rsync() error {
 		fmt.Printf("[diskscanner] Running backup of %s...\n", d.Dir)
 	}
 	l := linux.New()
-	l.SetRuntime(*max_runtime)
+	l.SetMaxRuntime(*max_runtime)
 	foo, err := l.SafelyExecute([]string{"rsync", "-pra", d.Dir, "rsync://johnsmith/buildrepo/"}, nil)
 	if err != nil {
 		fmt.Println(foo)

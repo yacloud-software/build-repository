@@ -9,7 +9,6 @@ import (
 	"golang.conradwood.net/apis/buildrepo"
 	"golang.conradwood.net/apis/common"
 	"golang.conradwood.net/go-easyops/authremote"
-	"golang.conradwood.net/go-easyops/tokens"
 	"golang.conradwood.net/go-easyops/utils"
 	"io"
 	"io/ioutil"
@@ -578,7 +577,7 @@ func findfile() {
 }
 func createContext() context.Context {
 	if 1 == 0 {
-		return tokens.ContextWithToken()
+		return authremote.Context()
 	}
 	return authremote.Context()
 }

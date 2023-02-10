@@ -28,6 +28,9 @@ func (b *BuildRepoServer) DoesFileExist(ctx context.Context, req *pb.GetFileRequ
 	if fr.Exists {
 		return &pb.FileExistsInfo{Exists: true}, nil
 	}
-	return nil, fmt.Errorf("could not get filename: %v", err)
+
+	// does not exist (neither locally nor in archive)
+	fmt.Printf("File %s (%s) does not exist locally nor in archive\n", req.File, filename)
+	return &pb.FileExistsInfo{Exists: false}, nil
 
 }

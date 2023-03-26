@@ -5,7 +5,8 @@ import (
 	"fmt"
 	pb "golang.conradwood.net/apis/buildrepo"
 	"golang.conradwood.net/build-repository/archive"
-	"golang.conradwood.net/go-easyops/utils"
+	//"golang.conradwood.net/go-easyops/utils"
+	"os"
 )
 
 func (b *BuildRepoServer) DoesFileExist(ctx context.Context, req *pb.GetFileRequest) (*pb.FileExistsInfo, error) {
@@ -15,9 +16,9 @@ func (b *BuildRepoServer) DoesFileExist(ctx context.Context, req *pb.GetFileRequ
 	if err != nil {
 		return nil, err
 	}
-
-	if utils.FileExists(filename) {
-		return &pb.FileExistsInfo{Exists: true}, nil
+	fi, err := os.Stat(filename)
+	if err == nil {
+		return &pb.FileExistsInfo{Exists: true, Size: uint64(fi.Size())}, nil
 	}
 
 	// perhaps it is in archive?
@@ -26,7 +27,7 @@ func (b *BuildRepoServer) DoesFileExist(ctx context.Context, req *pb.GetFileRequ
 		return nil, err
 	}
 	if fr.Exists {
-		return &pb.FileExistsInfo{Exists: true}, nil
+		return &pb.FileExistsInfo{Exists: true, Size: fr.Size}, nil
 	}
 
 	// does not exist (neither locally nor in archive)

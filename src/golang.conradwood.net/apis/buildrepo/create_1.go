@@ -1,8 +1,15 @@
 // client create: BuildRepoManagerClient
+/*
+  Created by /home/cnw/devel/go/go-tools/src/golang.conradwood.net/gotools/protoc-gen-cnw/protoc-gen-cnw.go
+*/
+
 /* geninfo:
    filename  : protos/golang.conradwood.net/apis/buildrepo/buildrepo.proto
    gopackage : golang.conradwood.net/apis/buildrepo
    importname: ai_0
+   clientfunc: GetBuildRepoManager
+   serverfunc: NewBuildRepoManager
+   lookupfunc: BuildRepoManagerLookupID
    varname   : client_BuildRepoManagerClient_0
    clientname: BuildRepoManagerClient
    servername: BuildRepoManagerServer
@@ -33,8 +40,9 @@ func GetBuildRepoManagerClient() BuildRepoManagerClient {
        return client_BuildRepoManagerClient_0
     }
 
-    client_BuildRepoManagerClient_0 = NewBuildRepoManagerClient(client.Connect("buildrepo.BuildRepoManager"))
+    client_BuildRepoManagerClient_0 = NewBuildRepoManagerClient(client.Connect(BuildRepoManagerLookupID()))
     lock_BuildRepoManagerClient_0.Unlock()
     return client_BuildRepoManagerClient_0
 }
 
+func BuildRepoManagerLookupID() string { return "buildrepo.BuildRepoManager" } // returns the ID suitable for lookup in the registry. treat as opaque, subject to change.

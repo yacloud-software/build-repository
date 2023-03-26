@@ -173,6 +173,7 @@ message FileList {
 
 message FileExistsInfo {
   bool Exists=1;
+  uint64 Size=2;
 }
 message GetRepoMetaRequest {
   string Path=1; // e.g. "autodeployer"

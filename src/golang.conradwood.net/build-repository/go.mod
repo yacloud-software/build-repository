@@ -8,7 +8,7 @@ require (
 	golang.conradwood.net/apis/deployminator v1.1.2296
 	golang.conradwood.net/apis/registry v1.1.2309
 	golang.conradwood.net/apis/slackgateway v1.1.2296
-	golang.conradwood.net/go-easyops v0.1.17825
+	golang.conradwood.net/go-easyops v0.1.17944
 	golang.org/x/net v0.11.0
 	golang.org/x/sys v0.9.0
 	golang.yacloud.eu/apis/buildrepoarchive v1.1.2296

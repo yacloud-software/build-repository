@@ -147,12 +147,12 @@ func (d *DiskScanner) find() {
 	last_run_good := 0
 	for {
 		prom_disk_last_run.Set(float64(last_run_good))
-		last_run_good = 1
 		d.running = false
 		<-d.ch
 		if !*do_enable {
 			continue
 		}
+		last_run_good = 1
 		d.running = true
 		// do not run in the 45 seconds after an upload was completed.
 		for time.Since(globals.LastUploadCompleted()) < time.Duration(45)*time.Second {
@@ -165,11 +165,6 @@ func (d *DiskScanner) find() {
 		if *debug {
 			fmt.Printf("[diskscanner] calculating size...\n")
 		}
-		err = checkIntegrity()
-		if err != nil {
-			fmt.Printf("[diskscanner] integrity problem found: %s\n", err)
-			continue
-		}
 
 		d.Builds, err = d.calc()
 		if err != nil {
@@ -181,12 +176,19 @@ func (d *DiskScanner) find() {
 				fmt.Printf("[diskscanner] Repo: %s (%d branches, %d versions, %16d bytes)\n", b.name, len(b.branches), len(b.Versions()), b.Size())
 			}
 		}
-		last_run_good = 2
 		prom_disk_size.Set(float64(d.Builds.Size()))
 		maxBytes := uint64(d.MaxSize * 1024 * 1024)
 		if d.Builds.Size() < maxBytes {
+			last_run_good = 2
 			continue
 		}
+		err = checkIntegrity()
+		if err != nil {
+			fmt.Printf("[diskscanner] integrity problem found: %s\n", err)
+			continue
+		}
+		last_run_good = 2
+
 		fmt.Printf("[diskscanner] Too big (%d Gb)\n", d.MaxSize/1024)
 		versions := d.Builds.Archivable()
 		fmt.Printf("[diskscanner] %d versions to archive\n", len(versions))

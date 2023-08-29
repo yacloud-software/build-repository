@@ -18,6 +18,7 @@ message CreateBuildRequest {
   uint64 RepositoryID = 7;
   // the artefact name - under which path to save it
   string ArtefactName = 8;
+  uint64 ArtefactID = 9; // the artefact id (artefact server)
 }
 
 message CreateBuildResponse {

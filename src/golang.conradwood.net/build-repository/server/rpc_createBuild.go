@@ -1,14 +1,12 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"os"
-
-	"golang.org/x/net/context"
-	"google.golang.org/grpc/peer"
-
 	pb "golang.conradwood.net/apis/buildrepo"
+	"google.golang.org/grpc/peer"
+	"os"
 )
 
 // CreateBuild :
@@ -59,6 +57,7 @@ func (brs *BuildRepoServer) CreateBuild(ctx context.Context, cr *pb.CreateBuildR
 	brs.cache.SetStored(
 		id,
 		&StoreMetaData{
+			ArtefactID:   cr.ArtefactID,
 			RepositoryID: cr.RepositoryID,
 			UserEmail:    cr.UserEmail,
 			BuildID:      int(cr.BuildID),

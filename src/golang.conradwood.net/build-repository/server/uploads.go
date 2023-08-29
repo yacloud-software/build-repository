@@ -1,9 +1,8 @@
 package main
 
 import (
-	"time"
-
 	pb "golang.conradwood.net/apis/buildrepo"
+	"time"
 )
 
 type StoreMetaData struct {
@@ -18,6 +17,7 @@ type StoreMetaData struct {
 	BuildDate    uint32
 	uploading    uint32
 	RepositoryID uint64
+	ArtefactID   uint64
 }
 
 // UploadMetaData :

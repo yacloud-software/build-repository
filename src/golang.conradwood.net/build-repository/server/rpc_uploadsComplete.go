@@ -7,6 +7,7 @@ import (
 	"fmt"
 	pb "golang.conradwood.net/apis/buildrepo"
 	dm "golang.conradwood.net/apis/deployminator"
+	dmo "golang.conradwood.net/apis/deploymonkey"
 	sb "golang.conradwood.net/apis/slackgateway"
 	"golang.conradwood.net/build-repository/globals"
 	"golang.conradwood.net/go-easyops/authremote"
@@ -20,8 +21,9 @@ import (
 )
 
 var (
-	slack        sb.SlackGatewayClient
-	deploymonkey = flag.String("deploymonkey_binary", "/srv/build-repository/artefacts/autodeployer/master/latest/dist/linux/amd64/deploymonkey-client", "location of the binary deploymonkey-client")
+	slack                   sb.SlackGatewayClient
+	use_deploymonkey_binary = flag.Bool("use_deploymonkey_binary", false, "if true, use an external deploymonkey binary to call deploymonkey. usually just do an rpc call")
+	deploymonkey            = flag.String("deploymonkey_binary", "/srv/build-repository/artefacts/autodeployer/master/latest/dist/linux/amd64/deploymonkey-client", "location of the binary deploymonkey-client")
 )
 
 // UploadsComplete : client claims it's all done, now call any hooks we might find
@@ -148,6 +150,43 @@ func tellDeployminator(store *StoreMetaData, filename string, registry string) {
 	fmt.Printf("Told deployminator (registry=%s) about new build %d in repo %d (artefact %s)\n", registry, nbr.BuildNumber, nbr.RepositoryID, nbr.ArtefactName)
 }
 func tellDeployMonkey(store *StoreMetaData, filename string, registry string) {
+	if *use_deploymonkey_binary {
+		// old style
+		tellDeployMonkeyUsingExternalClient(store, filename, registry)
+		return
+	}
+	// make a grpc call - the default
+	deployFile := fmt.Sprintf("%s/deployment/%s", store.StorePath, filename)
+	if !utils.FileExists(deployFile) {
+		// no deploy.yaml -> nothing to do
+		return
+	}
+	yaml, err := utils.ReadFile(deployFile)
+	if err != nil {
+		fmt.Printf("failed to read file: %s\n", err)
+		return
+	}
+	c := client.ConnectAt(registry, "deploymonkey.DeployMonkey")
+	depl := dmo.NewDeployMonkeyClient(c)
+	defer c.Close()
+
+	nbar := &dmo.NewBuildAvailableRequest{
+		DeployYaml:   yaml,
+		ArtefactID:   store.ArtefactID,
+		BuildRepoID:  *default_domain,
+		BuildID:      uint64(store.BuildID),
+		CommitID:     store.CommitID,
+		Branch:       store.Branch,
+		RepositoryID: store.RepositoryID,
+	}
+	ctx := authremote.Context()
+	_, err = depl.NewBuildAvailable(ctx, nbar)
+	if err != nil {
+		fmt.Printf("failed to tell deploymonkey about new build: %s\n", utils.ErrorString(err))
+		return
+	}
+}
+func tellDeployMonkeyUsingExternalClient(store *StoreMetaData, filename string, registry string) {
 	var err error
 	fmt.Printf("Sending %s to deploymonkey (repo %s) (registry=%s)\n", filename, store.Repository, registry)
 	tok, err := getBuildRepoToken()

@@ -27,6 +27,7 @@ var (
 	gitlabUser  = flag.String("user", "", "The GitLab user.")
 	reponame    = flag.String("repository", "", "name of repository")
 	repoid      = flag.Uint64("repository_id", 0, "unique id of repository")
+	artefactid  = flag.Uint64("artefact_id", 0, "artefact id (artefact server)")
 	branchname  = flag.String("branch", "", "branch of commit")
 	commitid    = flag.String("commitid", "", "commit")
 	commitmsg   = flag.String("commitmsg", "", "commit message")
@@ -151,6 +152,7 @@ func main() {
 		Branch:       *branchname,
 		BuildID:      uint64(*buildnumber),
 		CommitMSG:    *commitmsg,
+		ArtefactID:   *artefactid,
 	}
 
 	fmt.Printf("Updating buildrepo client...\n")

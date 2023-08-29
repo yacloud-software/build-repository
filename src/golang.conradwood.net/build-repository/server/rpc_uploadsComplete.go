@@ -167,6 +167,9 @@ func tellDeployMonkey(store *StoreMetaData, filename string, registry string) {
 		fmt.Printf("failed to read file: %s\n", err)
 		return
 	}
+	if !strings.Contains(registry, ":") {
+		registry = registry + ":5000"
+	}
 	c := client.ConnectAt(registry, "deploymonkey.DeployMonkey")
 	depl := dmo.NewDeployMonkeyClient(c)
 	defer c.Close()
@@ -186,6 +189,7 @@ func tellDeployMonkey(store *StoreMetaData, filename string, registry string) {
 		fmt.Printf("failed to tell deploymonkey about new build: %s\n", utils.ErrorString(err))
 		return
 	}
+	fmt.Printf("Told deploymonkey at registry %s about new build %d\n", registry, nbar.BuildID)
 }
 func tellDeployMonkeyUsingExternalClient(store *StoreMetaData, filename string, registry string) {
 	var err error

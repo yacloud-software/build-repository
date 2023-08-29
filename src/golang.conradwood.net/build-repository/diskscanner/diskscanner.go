@@ -189,7 +189,7 @@ func (d *DiskScanner) find() {
 		}
 		last_run_good = 2
 
-		fmt.Printf("[diskscanner] Too big (%d Gb)\n", d.MaxSize/1024)
+		fmt.Printf("[diskscanner] Size Too big, %dGb (maxsize %d Gb)\n", d.Builds.Size()/1024/1024/1024, d.MaxSize/1024)
 		versions := d.Builds.Archivable()
 		fmt.Printf("[diskscanner] %d versions to archive\n", len(versions))
 		for i, v := range versions {

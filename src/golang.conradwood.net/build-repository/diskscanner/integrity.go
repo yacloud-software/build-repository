@@ -8,7 +8,9 @@ import (
 )
 
 func checkIntegrity() error {
-	fmt.Printf("Checking repository integrity...\n")
+	if *debug {
+		fmt.Printf("Checking repository integrity...\n")
+	}
 	err := RepoWalk("/srv/build-repository/artefacts", func(root, rel string) error {
 		if !utils.FileExists("/srv/build-repository/metadata/" + rel) {
 			return fmt.Errorf("no metadata found for \"%s\"", rel)

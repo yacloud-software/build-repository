@@ -53,7 +53,7 @@ func RepoWalk(dir string, f func(root, rel string) error) error {
 				if do_skip_repowalk(dir + "/" + v_filename) {
 					continue
 				}
-				fmt.Printf("Filename: %s\n", v_filename)
+				//fmt.Printf("Filename: %s\n", v_filename)
 				err = f(dir, v_filename)
 				if err != nil {
 					return err

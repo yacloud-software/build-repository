@@ -127,13 +127,14 @@ func tellDeployminator(store *StoreMetaData, filename string, registry string) {
 		return
 	}
 	nbr := &dm.NewBuildRequest{
-		DeployFile:    df,
-		RepositoryID:  store.RepositoryID,
+		DeployFile: df,
+		//RepositoryID:  store.RepositoryID,
 		Branch:        store.Branch,
 		BuildNumber:   uint64(store.BuildID),
 		CommitID:      store.CommitID,
 		ArtefactName:  store.Repository,
 		BuildserverID: *default_domain,
+		ArtefactID:    store.ArtefactID,
 	}
 	ctx := authremote.Context()
 	dmc, err := GetDeployminatorClient(registry)
@@ -147,7 +148,7 @@ func tellDeployminator(store *StoreMetaData, filename string, registry string) {
 		fmt.Printf("deployminator error: %s\n", utils.ErrorString(err))
 		return
 	}
-	fmt.Printf("Told deployminator (registry=%s) about new build %d in repo %d (artefact %s)\n", registry, nbr.BuildNumber, nbr.RepositoryID, nbr.ArtefactName)
+	fmt.Printf("Told deployminator (registry=%s) about new build %d in repo %d (artefact %s)\n", registry, nbr.BuildNumber, nbr.ArtefactID, nbr.ArtefactName)
 }
 func tellDeployMonkey(store *StoreMetaData, filename string, registry string) {
 	if *use_deploymonkey_binary {

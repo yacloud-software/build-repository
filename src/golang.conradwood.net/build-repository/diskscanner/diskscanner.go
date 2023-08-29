@@ -144,7 +144,7 @@ func (d *DiskScanner) Unclean() {
 }
 func (d *DiskScanner) find() {
 	var err error
-	last_run_good := 0
+	last_run_good := 3
 	for {
 		prom_disk_last_run.Set(float64(last_run_good))
 		d.running = false

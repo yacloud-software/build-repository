@@ -100,6 +100,8 @@ golang.conradwood.net/apis/slackgateway v1.1.2489 h1:oyiZ1/MzzIROo8oTuuRP4VKYi8+
 golang.conradwood.net/apis/slackgateway v1.1.2489/go.mod h1:fMqS4OdBSWbhaQJGLmBdd8wskfMafYCc9zXd/PlPWvA=
 golang.conradwood.net/go-easyops v0.1.18789 h1:hHJnpQaoLdNg5/GhZ3JIFsKWzvHnQWk8sVR+lEFN26M=
 golang.conradwood.net/go-easyops v0.1.18789/go.mod h1:NPOCMQiR+fARe8eFFjDZx/LhsWKoIEAgbufZJxaCZRc=
+golang.conradwood.net/go-easyops v0.1.19039 h1:0iXvSoYWHS2/MRPkiJ1eRkKk41h9oYsllCR7NrzxOPU=
+golang.conradwood.net/go-easyops v0.1.19039/go.mod h1:Cz6Uz7Or6Yrsyb1iLzMwA8ItnDz/d0AdIkXGM23xv6M=
 golang.org/x/net v0.12.0 h1:cfawfvKITfUsFCeJIHJrbSxpeu/E81khclypR0GVT50=
 golang.org/x/net v0.12.0/go.mod h1:zEVYFnQC7m/vmpQFELhcD1EWkZlX69l4oqgmer6hfKA=
 golang.org/x/net v0.14.0 h1:BONx9s002vGdD9umnlX1Po8vOZmrgH34qlHcD1MfK14=

@@ -6,7 +6,6 @@ import (
 	"golang.conradwood.net/build-repository/archive"
 	"golang.conradwood.net/build-repository/globals"
 	"golang.conradwood.net/go-easyops/authremote"
-	"golang.conradwood.net/go-easyops/linux"
 	"golang.conradwood.net/go-easyops/prometheus"
 	"golang.conradwood.net/go-easyops/utils"
 	ba "golang.yacloud.eu/apis/buildrepoarchive"
@@ -21,10 +20,8 @@ var (
 	archive_timeout = flag.Duration("archive_timeout", time.Duration(120)*time.Second, "max runtime of the copy to archive upload")
 	do_remove       = flag.Bool("do_remove", true, "if true actually delete archived stuff")
 	debug           = flag.Bool("diskscanner_debug", false, "diskscanner debug mode")
-	backup          = flag.Bool("diskscanner_backup", true, "run backups of everything regularly and prior to archiving")
 	sleep           = flag.Int("diskscanner_sleep", 60, "amount of `seconds` between checks of diskspace")
 	sleep_fail      = flag.Duration("diskscanner_sleep_fail", time.Duration(60)*time.Minute, "sleep  between checks of diskspace, in fail mode")
-	max_runtime     = flag.Duration("diskscanner_max_runtime", time.Duration(600)*time.Second, "amount of `seconds` before rsync is forcibly killed")
 	do_enable       = flag.Bool("diskscanner_enable", true, "if false, do not run diskscanner")
 	unclean         = true
 	sl              = utils.NewSlidingAverage()
@@ -39,6 +36,12 @@ var (
 		prometheus.GaugeOpts{
 			Name: "buildrepo_diskscanner_size",
 			Help: "V=1 UNIT=decbytes DESC=gauge indicating size of archive",
+		},
+	)
+	prom_disk_last_run = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "buildrepo_last_diskscanner_status",
+			Help: "V=1 UNIT=none DESC=gauge indicating if diskscanner is happy",
 		},
 	)
 	prom_syncs = prometheus.NewCounter(
@@ -56,7 +59,7 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(prom_fail_mode, prom_disk_size, prom_syncs, prom_sync_fails)
+	prometheus.MustRegister(prom_disk_last_run, prom_fail_mode, prom_disk_size, prom_syncs, prom_sync_fails)
 }
 
 type DiskScanner struct {
@@ -141,7 +144,10 @@ func (d *DiskScanner) Unclean() {
 }
 func (d *DiskScanner) find() {
 	var err error
+	last_run_good := 0
 	for {
+		prom_disk_last_run.Set(float64(last_run_good))
+		last_run_good = 1
 		d.running = false
 		<-d.ch
 		if !*do_enable {
@@ -156,16 +162,13 @@ func (d *DiskScanner) find() {
 			fmt.Printf("[diskscanner] No dir set!\n")
 			continue
 		}
-		if *backup && unclean {
-			err = d.rsync()
-			if err != nil {
-				fmt.Printf("[diskscanner] Failed to archive (rsync): %s\n", err)
-				continue
-			}
-			unclean = false
-		}
 		if *debug {
 			fmt.Printf("[diskscanner] calculating size...\n")
+		}
+		err = checkIntegrity()
+		if err != nil {
+			fmt.Printf("[diskscanner] integrity problem found: %s\n", err)
+			continue
 		}
 
 		d.Builds, err = d.calc()
@@ -178,6 +181,7 @@ func (d *DiskScanner) find() {
 				fmt.Printf("[diskscanner] Repo: %s (%d branches, %d versions, %16d bytes)\n", b.name, len(b.branches), len(b.Versions()), b.Size())
 			}
 		}
+		last_run_good = 2
 		prom_disk_size.Set(float64(d.Builds.Size()))
 		maxBytes := uint64(d.MaxSize * 1024 * 1024)
 		if d.Builds.Size() < maxBytes {
@@ -215,20 +219,6 @@ func (d *DiskScanner) find() {
 	}
 }
 
-func (d *DiskScanner) rsync() error {
-	if *debug {
-		fmt.Printf("[diskscanner] Running backup of %s...\n", d.Dir)
-	}
-	l := linux.New()
-	l.SetMaxRuntime(*max_runtime)
-	foo, err := l.SafelyExecute([]string{"rsync", "-pra", d.Dir, "rsync://johnsmith/buildrepo/"}, nil)
-	if err != nil {
-		fmt.Println(foo)
-		fmt.Printf("[diskscanner] Failed: %s\n", err)
-		return err
-	}
-	return nil
-}
 func (d *DiskScanner) Trigger() {
 	d.ch <- 1
 }

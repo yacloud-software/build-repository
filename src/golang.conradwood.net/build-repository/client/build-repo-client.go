@@ -22,7 +22,6 @@ import (
 var (
 	download    = flag.String("download", "", "if non empty, and a valid buildrepo url, then this will download a file")
 	do_unfail   = flag.Bool("unfail", false, "if true, unfail diskscanner")
-	tooldir     = flag.String("tooldir", "", "The location of directory to download tools to (overwrites existing files!).")
 	artefact    = flag.String("artefact", "", "Fetch a specific artefact (use with tooldir)")
 	gitlabUser  = flag.String("user", "", "The GitLab user.")
 	reponame    = flag.String("repository", "", "name of repository")
@@ -76,22 +75,6 @@ func main() {
 	}
 	if *findname {
 		findfile()
-		os.Exit(0)
-	}
-	if *tooldir != "" {
-		if *artefact != "" {
-			if *reponame == "" {
-				fmt.Println("-reponame is required")
-				os.Exit(1)
-			}
-			branch := "master"
-			if *branchname != "" {
-				branch = *branchname
-			}
-			DownloadOneTool(*tooldir, *reponame, branch, *artefact)
-		} else {
-			DownloadTools(*tooldir)
-		}
 		os.Exit(0)
 	}
 
@@ -187,114 +170,6 @@ func main() {
 		fmt.Printf("Upload not completed yet: %d uploading\n", r.Uploading)
 		time.Sleep(3 * time.Second)
 	}
-}
-
-func DownloadOneTool(tooldir string, reponame string, branch string, artefact string) {
-	if _, err := os.Stat(tooldir); os.IsNotExist(err) {
-		os.Mkdir(tooldir, 0755)
-	}
-	glvr := buildrepo.GetLatestVersionRequest{Repository: reponame, Branch: branch}
-	glv, err := grpcClient.GetLatestVersion(createContext(), &glvr)
-	utils.Bail("Tool not found", err)
-	f := &buildrepo.File{
-		Repository: reponame,
-		Branch:     branch,
-		BuildID:    glv.GetBuildID(),
-		Filename:   artefact,
-	}
-	FetchOneFile(f, err)
-}
-
-// DownloadTools : download the toolkit to specified directory
-func DownloadTools(tooldir string) {
-
-	if _, err := os.Stat(tooldir); os.IsNotExist(err) {
-		os.Mkdir(tooldir, 0755)
-	}
-
-	ltr, err := grpcClient.ListTools(createContext(), &common.Void{})
-
-	utils.Bail("Failed to list tools", err)
-
-	fmt.Println()
-	fmt.Println("*** download started  ***")
-	download_errors := 0
-	for _, tool := range ltr.Tools {
-
-		glvr := buildrepo.GetLatestVersionRequest{Repository: tool.GetRepository(), Branch: "master"}
-		glv, err := grpcClient.GetLatestVersion(createContext(), &glvr)
-
-		if err != nil {
-			fmt.Printf("Failed to get latest version of tool %s %s\n", tool.Filename, err)
-			download_errors++
-			continue
-		}
-
-		f := &buildrepo.File{
-			Repository: tool.GetRepository(),
-			Branch:     "master",
-			BuildID:    glv.GetBuildID(),
-			Filename:   tool.GetFilename(),
-		}
-		FetchOneFile(f, err)
-	}
-	if download_errors > 0 {
-		fmt.Printf("Got %d download errors\n", download_errors)
-		os.Exit(1)
-
-	}
-	fmt.Println("*** download complete ***")
-}
-
-func FetchOneFile(f *buildrepo.File, err error) {
-
-	gfr := &buildrepo.GetFileRequest{
-		File:      f,
-		Blocksize: uint32(*blocksize),
-	}
-	fmt.Printf("%v\n", gfr)
-	stream, err := grpcClient.GetFileAsStream(createContext(), gfr)
-	utils.Bail("Failed to get stream", err)
-	fmt.Printf("Downloading %s from repo %s\n", f.GetFilename(), f.GetRepository())
-	final_path := *tooldir + "/" + f.GetFilename()
-	tmp_path := final_path + ".tmp"
-	file, err := os.OpenFile(tmp_path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
-	utils.Bail("opening "+tmp_path, err)
-	var i = 0
-	for {
-		block, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			fmt.Printf("stream.Recv failed with %v  %v\n", stream, err)
-			break
-		}
-
-		_, err = file.Write(block.Data[0:block.GetSize()])
-
-		utils.Bail("writing to "+tmp_path, err)
-
-		switch i {
-		case 0:
-			fmt.Print("\r[|]")
-		case 500:
-			fmt.Print("\r[/]")
-		case 1000:
-			fmt.Print("\r[-]")
-		case 1500:
-			fmt.Print("\r[\\]")
-		}
-		i++
-		if i >= 2000 {
-			i = 0
-		}
-
-	}
-	fmt.Println("\r   ")
-	file.Close()
-	err = os.Rename(tmp_path, final_path)
-	utils.Bail("Renaming "+tmp_path+" to "+final_path, err)
 }
 
 // get an arbitrary block from a file from repo

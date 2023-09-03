@@ -183,9 +183,13 @@ message GetRepoMetaRequest {
 message RepoMetaInfo {
   uint64 RepositoryID=1;
 }
-
+message ManagerInfo {
+  string Domain=1;
+}
 
 service BuildRepoManager {
+  // get information about this buildrepo instance
+  rpc GetManagerInfo(common.Void) returns (ManagerInfo);
   rpc CreateBuild(CreateBuildRequest) returns (CreateBuildResponse);
   rpc GetUploadToken(UploadTokenRequest) returns (UploadTokenResponse);
   rpc UploadsComplete(UploadDoneRequest) returns (UploadDoneResponse);
@@ -193,7 +197,7 @@ service BuildRepoManager {
   rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse);
   rpc ListVersions(ListVersionsRequest) returns (ListVersionsResponse);
   rpc ListFiles(ListFilesRequest) returns (ListFilesResponse);
-  rpc ListTools(common.Void) returns (ListToolsResponse);
+  //  rpc ListTools(common.Void) returns (ListToolsResponse);
   rpc GetLatestVersion(GetLatestVersionRequest) returns (GetLatestVersionResponse);
   rpc GetBlock(GetBlockRequest) returns (GetBlockResponse);
   rpc GetFileMetaData(GetMetaRequest) returns (GetMetaResponse);

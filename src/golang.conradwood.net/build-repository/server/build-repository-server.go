@@ -2,7 +2,7 @@ package main
 
 // don't use it in an untrusted environment!
 // it expects clients to be authenticated
-// (e.g. lbproxy)
+// (e.g. h2gproxy)
 import (
 	"context"
 	"flag"

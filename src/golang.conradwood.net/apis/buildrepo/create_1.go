@@ -49,4 +49,5 @@ func BuildRepoManagerLookupID() string { return "buildrepo.BuildRepoManager" } /
 
 func init() {
    client.RegisterDependency("buildrepo.BuildRepoManager")
+   AddService("buildrepo.BuildRepoManager")
 }

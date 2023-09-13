@@ -9,7 +9,7 @@ require (
 	golang.conradwood.net/apis/deploymonkey v1.1.2525
 	golang.conradwood.net/apis/registry v1.1.2525
 	golang.conradwood.net/apis/slackgateway v1.1.2525
-	golang.conradwood.net/go-easyops v0.1.19878
+	golang.conradwood.net/go-easyops v0.1.20106
 	golang.org/x/net v0.14.0
 	golang.org/x/sys v0.11.0
 	golang.yacloud.eu/apis/buildrepoarchive v1.1.2525
@@ -35,7 +35,6 @@ require (
 	golang.conradwood.net/apis/goeasyops v1.1.2525 // indirect
 	golang.conradwood.net/apis/h2gproxy v1.1.2525 // indirect
 	golang.conradwood.net/apis/objectstore v1.1.2525 // indirect
-	golang.conradwood.net/apis/rpcinterceptor v1.1.2525 // indirect
 	golang.org/x/text v0.12.0 // indirect
 	golang.yacloud.eu/apis/session v1.1.2525 // indirect
 	golang.yacloud.eu/apis/urlcacher v1.1.2525 // indirect

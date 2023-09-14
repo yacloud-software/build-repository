@@ -41,7 +41,7 @@ var (
 	prom_disk_last_run = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "buildrepo_last_diskscanner_status",
-			Help: "V=1 UNIT=none DESC=gauge indicating if diskscanner is happy",
+			Help: "V=1 UNIT=none DESC=gauge indicating if diskscanner is happy (1=fail,2=good,3=indeterminate)",
 		},
 	)
 	prom_syncs = prometheus.NewCounter(

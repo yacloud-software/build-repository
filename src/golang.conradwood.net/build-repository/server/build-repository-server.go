@@ -86,7 +86,7 @@ func main() {
 
 	go grpcServer.Serve(lis)
 	sd := server.NewServerDef()
-	sd.Port = (*port + 1)
+	sd.SetPort((*port + 1))
 	sd.Register = server.Register(
 		func(server *grpc.Server) error {
 			pb.RegisterBuildRepoManagerServer(server, e)

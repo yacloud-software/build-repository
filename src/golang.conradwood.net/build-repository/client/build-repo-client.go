@@ -20,7 +20,7 @@ import (
 
 // static variables for flag parser
 var (
-	download    = flag.String("download", "", "if non empty, and a valid buildrepo url, then this will download a file")
+	download    = flag.String("download", "", "if non empty, and a valid buildrepo url, then this will download a file,e.g.: buildrepo://public/go-easyops/master/21154/dist/dist.tar.bz2")
 	do_unfail   = flag.Bool("unfail", false, "if true, unfail diskscanner")
 	artefact    = flag.String("artefact", "", "Fetch a specific artefact (use with tooldir)")
 	gitlabUser  = flag.String("user", "", "The GitLab user.")

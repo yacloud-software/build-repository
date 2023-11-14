@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	pb "golang.conradwood.net/apis/buildrepo"
+	"golang.conradwood.net/build-repository/helper"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -13,7 +14,7 @@ func saveCommitData(smd *StoreMetaData) error {
 	if smd.BuildDate == 0 {
 		smd.BuildDate = uint32(time.Now().Unix())
 	}
-	dir := fmt.Sprintf("%s/%s/%s/%d", *metadir, smd.Repository, smd.Branch, smd.BuildID)
+	dir := fmt.Sprintf("%s/%s/%s/%d", helper.GetMetadir(), smd.Repository, smd.Branch, smd.BuildID)
 	filename := fmt.Sprintf("%s/build.yaml", dir)
 	st, err := os.Stat(dir)
 	if (err == nil) && (st != nil) {
@@ -48,13 +49,13 @@ func getMetadata(repo string, branch string, buildid uint64) (*pb.BuildMeta, err
 
 // obsolete - use getmetadata (which returns a proto instead)
 func loadMetadata(repo string, branch string, buildid uint64) (*StoreMetaData, error) {
-	if !isValidName(repo) {
+	if !helper.IsValidName(repo) {
 		return nil, fmt.Errorf("Invalid repo name \"%s\"", repo)
 	}
-	if !isValidName(branch) {
+	if !helper.IsValidName(branch) {
 		return nil, fmt.Errorf("Invalid branch name \"%s\"", branch)
 	}
-	dir := fmt.Sprintf("%s/%s/%s/%d", *metadir, repo, branch, buildid)
+	dir := fmt.Sprintf("%s/%s/%s/%d", helper.GetMetadir(), repo, branch, buildid)
 	filename := fmt.Sprintf("%s/build.yaml", dir)
 	b, err := ioutil.ReadFile(filename)
 	if err != nil {

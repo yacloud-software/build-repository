@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	pb "golang.conradwood.net/apis/buildrepo"
+	"golang.conradwood.net/build-repository/helper"
 	"strconv"
 )
 
@@ -11,11 +12,11 @@ import (
 func (brs *BuildRepoServer) GetLatestVersion(ctx context.Context, req *pb.GetLatestVersionRequest) (*pb.GetLatestVersionResponse, error) {
 	repo := req.Repository
 	fmt.Printf("Getting latest version of repository \"%s\"\n", repo)
-	if !isValidName(repo) {
+	if !helper.IsValidName(repo) {
 		return nil, fmt.Errorf("Invalid repo name \"%s\"", repo)
 	}
 	branch := req.Branch
-	if !isValidName(branch) {
+	if !helper.IsValidName(branch) {
 		return nil, fmt.Errorf("Invalid branch name \"%s\"", branch)
 	}
 	/*
@@ -24,7 +25,7 @@ func (brs *BuildRepoServer) GetLatestVersion(ctx context.Context, req *pb.GetLat
 					fmt.Printf("getting latest version for repo %s and branch %s\n", repo, branch)
 				}
 	*/
-	repodir := fmt.Sprintf("%s/%s/%s", base, repo, branch)
+	repodir := fmt.Sprintf("%s/%s/%s", helper.GetBase(), repo, branch)
 	e, err := ReadEntries(repodir)
 	if err != nil {
 		return nil, err

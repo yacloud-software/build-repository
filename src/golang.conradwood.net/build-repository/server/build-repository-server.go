@@ -9,6 +9,7 @@ import (
 	"fmt"
 	pb "golang.conradwood.net/apis/buildrepo"
 	"golang.conradwood.net/build-repository/diskscanner"
+	"golang.conradwood.net/build-repository/helper"
 	"golang.conradwood.net/go-easyops/cmdline"
 	"golang.conradwood.net/go-easyops/server"
 	"golang.conradwood.net/go-easyops/utils"
@@ -28,18 +29,15 @@ const (
 
 // static variables
 var (
-	url            = flag.String("download", "", "if non empty, and a valid buildrepo url, then this will download a file")
-	default_domain = flag.String("default_domain", "", "default domain for this build repository")
-	maxsize        = flag.Int("max_gb", 1000, "max gigabyte the repository may grow")
-	port           = flag.Int("port", 5004, "The server port")
-	httpport       = flag.Int("http_port", 5005, "The http server port")
-	base           = "/srv/build-repository/artefacts"
-	hooksdir       = flag.String("hooks", "/srv/build-repository/hooks", "Directory to search for hooks")
-	metadir        = flag.String("metadir", "/srv/build-repository/metadata", "Directory to save metadata in")
-	reservedir     = flag.String("reservedir", "/srv/build-repository/reservedbuild", "Directory to save reserved builds in")
-	src            = rand.NewSource(time.Now().UnixNano())
-	debug          = flag.Bool("debug", false, "enable debug output")
-	diskScanner    *diskscanner.DiskScanner
+	url         = flag.String("download", "", "if non empty, and a valid buildrepo url, then this will download a file")
+	maxsize     = flag.Int("max_gb", 1000, "max gigabyte the repository may grow")
+	port        = flag.Int("port", 5004, "The server port")
+	httpport    = flag.Int("http_port", 5005, "The http server port")
+	hooksdir    = flag.String("hooks", "/srv/build-repository/hooks", "Directory to search for hooks")
+	reservedir  = flag.String("reservedir", "/srv/build-repository/reservedbuild", "Directory to save reserved builds in")
+	src         = rand.NewSource(time.Now().UnixNano())
+	debug       = flag.Bool("debug", false, "enable debug output")
+	diskScanner *diskscanner.DiskScanner
 )
 
 // BuildRepoServer :
@@ -59,7 +57,7 @@ func main() {
 		fmt.Printf("Found deployminator at address %s\n", dmc.adr)
 	}
 	diskScanner = diskscanner.NewDiskScanner()
-	diskScanner.Dir = base
+	diskScanner.Dir = helper.GetBase()
 	diskScanner.MaxSize = int64(*maxsize * 1024)
 	diskScanner.Start()
 
@@ -142,7 +140,7 @@ func ReadEntries(dir string) ([]*pb.RepoEntry, error) {
 		if fi.IsDir() {
 			re.Type = 2
 		}
-		re.Domain = getDomainForRepo(re)
+		re.Domain = helper.GetDomainForRepo(re)
 		res = append(res, re)
 	}
 	return res, nil
@@ -154,7 +152,7 @@ func toFilename(f *pb.File) (string, error) {
 	if strings.Contains(filename, "~") {
 		return "", fmt.Errorf("Filename must not contain '~' (%s)", filename)
 	}
-	filename = fmt.Sprintf("%s/%s/%s/%d/dist/%s", base, f.Repository, f.Branch, f.BuildID, filename)
+	filename = fmt.Sprintf("%s/%s/%s/%d/dist/%s", helper.GetBase(), f.Repository, f.Branch, f.BuildID, filename)
 
 	/*
 		if *debug {
@@ -176,7 +174,7 @@ func toLinuxFilename(f *pb.File) (string, error) {
 	if strings.Contains(filename, "..") {
 		return "", fmt.Errorf("Filename must not contain '..' (%s)", filename)
 	}
-	filename = fmt.Sprintf("%s/%s/%s/%d/%s", base, f.Repository, f.Branch, f.BuildID, filename)
+	filename = fmt.Sprintf("%s/%s/%s/%d/%s", helper.GetBase(), f.Repository, f.Branch, f.BuildID, filename)
 	if *debug {
 		fmt.Printf("Filename: %s\n", filename)
 	}
@@ -189,7 +187,7 @@ func toDarwinFilename(f *pb.File) (string, error) {
 	if strings.Contains(filename, "~") {
 		return "", fmt.Errorf("Filename must not contain '~' (%s)", filename)
 	}
-	filename = fmt.Sprintf("%s/%s/%s/%d/dist/darwin/amd64/%s", base, f.Repository, f.Branch, f.BuildID, filename)
+	filename = fmt.Sprintf("%s/%s/%s/%d/dist/darwin/amd64/%s", helper.GetBase(), f.Repository, f.Branch, f.BuildID, filename)
 	if *debug {
 		fmt.Printf("Filename: %s\n", filename)
 	}
@@ -202,7 +200,7 @@ func toWindowsFilename(f *pb.File) (string, error) {
 	if strings.Contains(filename, "~") {
 		return "", fmt.Errorf("Filename must not contain '~' (%s)", filename)
 	}
-	filename = fmt.Sprintf("%s/%s/%s/%d/dist/windows/amd64/%s", base, f.Repository, f.Branch, f.BuildID, filename)
+	filename = fmt.Sprintf("%s/%s/%s/%d/dist/windows/amd64/%s", helper.GetBase(), f.Repository, f.Branch, f.BuildID, filename)
 	if *debug {
 		fmt.Printf("Filename: %s\n", filename)
 	}
@@ -210,7 +208,7 @@ func toWindowsFilename(f *pb.File) (string, error) {
 }
 
 func (b *BuildRepoServer) ReserveNextBuildNumber(ctx context.Context, req *pb.RepoDef) (*pb.BuildNumber, error) {
-	i, err := getLatestRepoVersion(req.Repository, req.Branch)
+	i, err := helper.GetLatestRepoVersion(req.Repository, req.Branch)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to get latest version for %s/%s: %s", req.Repository, req.Branch, err)
 	}

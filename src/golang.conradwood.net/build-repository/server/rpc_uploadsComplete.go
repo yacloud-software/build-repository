@@ -10,6 +10,7 @@ import (
 	dmo "golang.conradwood.net/apis/deploymonkey"
 	sb "golang.conradwood.net/apis/slackgateway"
 	"golang.conradwood.net/build-repository/globals"
+	"golang.conradwood.net/build-repository/helper"
 	"golang.conradwood.net/go-easyops/authremote"
 	"golang.conradwood.net/go-easyops/client"
 	cl "golang.conradwood.net/go-easyops/cmdline"
@@ -133,7 +134,7 @@ func tellDeployminator(store *StoreMetaData, filename string, registry string) {
 		BuildNumber:   uint64(store.BuildID),
 		CommitID:      store.CommitID,
 		ArtefactName:  store.Repository,
-		BuildserverID: *default_domain,
+		BuildserverID: helper.GetDefaultDomain(),
 		ArtefactID:    store.ArtefactID,
 	}
 	ctx := authremote.Context()
@@ -177,7 +178,7 @@ func tellDeployMonkey(store *StoreMetaData, filename string, registry string) {
 	nbar := &dmo.NewBuildAvailableRequest{
 		DeployYaml:   yaml,
 		ArtefactID:   store.ArtefactID,
-		BuildRepoID:  *default_domain,
+		BuildRepoID:  helper.GetDefaultDomain(),
 		BuildID:      uint64(store.BuildID),
 		CommitID:     store.CommitID,
 		Branch:       store.Branch,

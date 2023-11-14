@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	pb "golang.conradwood.net/apis/buildrepo"
+	"golang.conradwood.net/build-repository/helper"
 	"golang.org/x/net/context"
 	"io/ioutil"
 	"strings"
@@ -11,18 +12,18 @@ import (
 // ListFiles : list all files for a given build
 func (brs *BuildRepoServer) ListFiles(ctx context.Context, req *pb.ListFilesRequest) (*pb.ListFilesResponse, error) {
 	repo := req.Repository
-	if !isValidName(repo) {
+	if !helper.IsValidName(repo) {
 		return nil, fmt.Errorf("Invalid repo name \"%s\"", repo)
 	}
 	branch := req.Branch
-	if !isValidName(branch) {
+	if !helper.IsValidName(branch) {
 		return nil, fmt.Errorf("Invalid branch name \"%s\"", branch)
 	}
 	build := req.BuildID
 	if *debug {
 		fmt.Printf("Listing versions for repo %s and branch %s and build %d\n", repo, branch, build)
 	}
-	repodir := fmt.Sprintf("%s/%s/%s/%d", base, repo, branch, build)
+	repodir := fmt.Sprintf("%s/%s/%s/%d", helper.GetBase(), repo, branch, build)
 	res := pb.ListFilesResponse{}
 	x, err := ReadEntriesNew(repodir, req.Dir, true)
 	if err != nil {
@@ -56,7 +57,7 @@ func ReadEntriesNew(repo string, dir string, recurse bool) ([]*pb.RepoEntry, err
 				res = append(res, ad...)
 			}
 		}
-		re.Domain = getDomainForRepo(re)
+		re.Domain = helper.GetDomainForRepo(re)
 		res = append(res, re)
 	}
 	return res, nil

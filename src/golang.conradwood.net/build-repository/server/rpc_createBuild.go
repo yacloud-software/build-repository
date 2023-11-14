@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	pb "golang.conradwood.net/apis/buildrepo"
+	"golang.conradwood.net/build-repository/helper"
 	"google.golang.org/grpc/peer"
 	"os"
 )
@@ -39,7 +40,7 @@ func (brs *BuildRepoServer) CreateBuild(ctx context.Context, cr *pb.CreateBuildR
 	}
 	resp := pb.CreateBuildResponse{}
 
-	dir := fmt.Sprintf("%s/%s/%s/%d", base, cr.Repository, cr.Branch, cr.BuildID)
+	dir := fmt.Sprintf("%s/%s/%s/%d", helper.GetBase(), cr.Repository, cr.Branch, cr.BuildID)
 	st, err := os.Stat(dir)
 	if (err == nil) && (st != nil) {
 		return nil, fmt.Errorf("Dir %s already exists. Trying to update an existing build??", dir)
@@ -52,7 +53,7 @@ func (brs *BuildRepoServer) CreateBuild(ctx context.Context, cr *pb.CreateBuildR
 	fmt.Println("Created directory:", dir)
 	fmt.Println(peer.Addr, "called createbuild")
 
-	id, _ := randString(CONST_RAND_ID_STRING_LEN)
+	id, _ := helper.RandString(CONST_RAND_ID_STRING_LEN)
 
 	brs.cache.SetStored(
 		id,
@@ -72,7 +73,7 @@ func (brs *BuildRepoServer) CreateBuild(ctx context.Context, cr *pb.CreateBuildR
 
 	resp.BuildStoreid = id
 
-	linkdir := fmt.Sprintf("%s/%s/%s", base, cr.Repository, cr.Branch)
+	linkdir := fmt.Sprintf("%s/%s/%s", helper.GetBase(), cr.Repository, cr.Branch)
 	err = brs.UpdateSymLink(linkdir, int(cr.BuildID))
 	if err != nil {
 		fmt.Printf("Failed to create symlink in %s: %v\n", linkdir, err)

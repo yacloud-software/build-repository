@@ -1,14 +1,15 @@
 package main
 
 import (
+	"context"
 	pb "golang.conradwood.net/apis/buildrepo"
-	"golang.org/x/net/context"
+	"golang.conradwood.net/build-repository/helper"
 )
 
 // ListRepos : list names of all repositories on this build server
 func (brs *BuildRepoServer) ListRepos(ctx context.Context, req *pb.ListReposRequest) (*pb.ListReposResponse, error) {
 	res := pb.ListReposResponse{}
-	e, err := ReadEntries(base)
+	e, err := ReadEntries(helper.GetBase())
 	res.Entries = e
 	if err != nil {
 		return nil, err

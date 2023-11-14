@@ -4,19 +4,20 @@ import (
 	"context"
 	"fmt"
 	pb "golang.conradwood.net/apis/buildrepo"
+	"golang.conradwood.net/build-repository/helper"
 	"golang.conradwood.net/go-easyops/errors"
 	"golang.conradwood.net/go-easyops/utils"
 	"os"
 )
 
 func (b *BuildRepoServer) GetRepositoryMeta(ctx context.Context, req *pb.GetRepoMetaRequest) (*pb.RepoMetaInfo, error) {
-	if !isValidName(req.Path) {
+	if !helper.IsValidName(req.Path) {
 		return nil, errors.InvalidArgs(ctx, "not a valid path (%s)", req.Path)
 	}
 	return loadRepoMeta(ctx, req.Path)
 }
 func loadRepoMeta(ctx context.Context, repo string) (*pb.RepoMetaInfo, error) {
-	filename := fmt.Sprintf("%s/%s/repometa.proto", *metadir, repo)
+	filename := fmt.Sprintf("%s/%s/repometa.proto", helper.GetMetadir(), repo)
 	if !utils.FileExists(filename) {
 		return nil, errors.NotFound(ctx, "\"%s\" not found", filename)
 	}
@@ -32,7 +33,7 @@ func loadRepoMeta(ctx context.Context, repo string) (*pb.RepoMetaInfo, error) {
 	return res, nil
 }
 func saveRepoMeta(ctx context.Context, repo string, meta *pb.RepoMetaInfo) error {
-	dir := fmt.Sprintf("%s/%s", *metadir, repo)
+	dir := fmt.Sprintf("%s/%s", helper.GetMetadir(), repo)
 	filename := fmt.Sprintf("%s/repometa.proto", dir)
 	bs, err := utils.MarshalBytes(meta)
 	if err != nil {

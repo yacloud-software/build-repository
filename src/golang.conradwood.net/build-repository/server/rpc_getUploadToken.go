@@ -3,12 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
+	pb "golang.conradwood.net/apis/buildrepo"
+	"golang.conradwood.net/build-repository/helper"
+	"golang.org/x/net/context"
 	"os"
 	"path/filepath"
 	"strings"
-
-	pb "golang.conradwood.net/apis/buildrepo"
-	"golang.org/x/net/context"
 )
 
 // GetUploadToken :
@@ -20,7 +20,7 @@ import (
 // because we might store the files elsewhere in future)
 func (brs *BuildRepoServer) GetUploadToken(ctx context.Context, pr *pb.UploadTokenRequest) (*pb.UploadTokenResponse, error) {
 
-	token, _ := randString(CONST_RAND_ID_STRING_LEN)
+	token, _ := helper.RandString(CONST_RAND_ID_STRING_LEN)
 	res := &pb.UploadTokenResponse{
 		Token: token,
 	}
@@ -32,9 +32,9 @@ func (brs *BuildRepoServer) GetUploadToken(ctx context.Context, pr *pb.UploadTok
 	}
 
 	sp := brs.cache.GetStored(pr.BuildStoreid).StorePath
-	if !strings.HasPrefix(sp, base) {
+	if !strings.HasPrefix(sp, helper.GetBase()) {
 		if *debug {
-			fmt.Printf("Base=\"%s\", but token sent was: \"%s\"\n", base, sp)
+			fmt.Printf("Base=\"%s\", but token sent was: \"%s\"\n", helper.GetBase(), sp)
 		}
 		return res, errors.New("storeid is invalid")
 	}

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	pb "golang.conradwood.net/apis/buildrepo"
+	"golang.conradwood.net/build-repository/helper"
 	"golang.org/x/net/context"
 	"io/ioutil"
 )
@@ -18,7 +19,7 @@ func (b *BuildRepoServer) FindFiles(ctx context.Context, req *pb.FilePattern) (*
 	res := pb.FileList{}
 	for _, r := range repos.Entries {
 		branch := "master"
-		latest, err := getLatestRepoVersion(r.Name, branch)
+		latest, err := helper.GetLatestRepoVersion(r.Name, branch)
 		if err != nil {
 			fmt.Printf("findfiles: no latest version for %s/%s\n", r.Name, branch)
 			// no latest version? bullshit, just continue
@@ -26,19 +27,19 @@ func (b *BuildRepoServer) FindFiles(ctx context.Context, req *pb.FilePattern) (*
 		}
 		build := fmt.Sprintf("%d", latest)
 		repo := r.Name
-		if !isValidName(repo) {
+		if !helper.IsValidName(repo) {
 			return nil, fmt.Errorf("Invalid repo name \"%s\"", repo)
 		}
-		if !isValidName(branch) {
+		if !helper.IsValidName(branch) {
 			return nil, fmt.Errorf("Invalid branch name \"%s\"", branch)
 		}
-		if !isValidName(build) {
+		if !helper.IsValidName(build) {
 			return nil, fmt.Errorf("Invalid build name \"%s\"", build)
 		}
 		if *debug {
 			fmt.Printf("Listing versions for repo %s and branch %s and build %s\n", repo, branch, build)
 		}
-		repodir := fmt.Sprintf("%s/%s/%s/%s", base, repo, branch, build)
+		repodir := fmt.Sprintf("%s/%s/%s/%s", helper.GetBase(), repo, branch, build)
 		files, err := findFilesInDir(repodir, filenames)
 		if err != nil {
 			return nil, fmt.Errorf("findfiles: %s", err)

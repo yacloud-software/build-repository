@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-
 	pb "golang.conradwood.net/apis/buildrepo"
+	"golang.conradwood.net/build-repository/helper"
 	"golang.org/x/net/context"
 )
 
@@ -13,10 +13,10 @@ func (brs *BuildRepoServer) ListBranches(ctx context.Context, req *pb.ListBranch
 	if *debug {
 		fmt.Printf("Listing branches of repository %s\n", repo)
 	}
-	if !isValidName(repo) {
+	if !helper.IsValidName(repo) {
 		return nil, fmt.Errorf("Invalid name \"%s\"", repo)
 	}
-	repodir := fmt.Sprintf("%s/%s", base, repo)
+	repodir := fmt.Sprintf("%s/%s", helper.GetBase(), repo)
 	res := pb.ListBranchesResponse{}
 	e, err := ReadEntries(repodir)
 	res.Entries = e

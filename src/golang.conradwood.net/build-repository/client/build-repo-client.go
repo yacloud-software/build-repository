@@ -20,6 +20,7 @@ import (
 
 // static variables for flag parser
 var (
+	versions    = flag.Bool("versions", false, "get versions of repo")
 	download    = flag.String("download", "", "if non empty, and a valid buildrepo url, then this will download a file,e.g.: buildrepo://public/go-easyops/master/21154/dist/dist.tar.bz2")
 	do_unfail   = flag.Bool("unfail", false, "if true, unfail diskscanner")
 	artefact    = flag.String("artefact", "", "Fetch a specific artefact (use with tooldir)")
@@ -77,7 +78,10 @@ func main() {
 		findfile()
 		os.Exit(0)
 	}
-
+	if *versions {
+		utils.Bail("failed to get version", Versions())
+		os.Exit(0)
+	}
 	if *versionfile != "" {
 		updateVersionFile(*versionfile)
 		os.Exit(0)
@@ -453,8 +457,31 @@ func findfile() {
 	}
 }
 func createContext() context.Context {
-	if 1 == 0 {
-		return authremote.Context()
-	}
 	return authremote.Context()
+}
+func getRepoName() string {
+	return *reponame
+}
+func Versions() error {
+	ctx := createContext()
+	lvr := &buildrepo.ListVersionsRequest{
+		Repository: getRepoName(),
+		Branch:     "master",
+	}
+	lv, err := grpcClient.ListVersions(ctx, lvr)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%d Versions:\n", len(lv.Entries))
+	t := utils.Table{}
+	t.AddHeaders("Version", "Type", "Dir", "Domain")
+	for _, br := range lv.Entries {
+		t.AddString(br.Name)
+		t.AddUint32(uint32(br.Type))
+		t.AddString(br.Dir)
+		t.AddString(br.Domain)
+		t.NewRow()
+	}
+	fmt.Println(t.ToPrettyString())
+	return nil
 }

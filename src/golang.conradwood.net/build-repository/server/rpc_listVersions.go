@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	pb "golang.conradwood.net/apis/buildrepo"
 	"golang.org/x/net/context"
 )
@@ -22,7 +21,7 @@ func (brs *BuildRepoServer) ListVersions(ctx context.Context, req *pb.ListVersio
 	}
 	repodir := fmt.Sprintf("%s/%s/%s", base, repo, branch)
 	res := pb.ListVersionsResponse{}
-	e, err := ReadEntries(repodir)
+	e, err := GetVersionsFromDir(repodir, false)
 	res.Entries = e
 	if err != nil {
 		return nil, err

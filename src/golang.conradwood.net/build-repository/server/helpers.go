@@ -3,6 +3,8 @@ package main
 import (
 	"crypto/rand"
 	"fmt"
+	pb "golang.conradwood.net/apis/buildrepo"
+	"io/ioutil"
 	"strconv"
 	"strings"
 )
@@ -61,4 +63,25 @@ func getLatestRepoVersion(repo string, branch string) (uint64, error) {
 		}
 	}
 	return uint64(v), nil
+}
+
+// get the versions in a dir
+// dir, for example: /srv/build-repository/artefacts/build-repository/master/
+func GetVersionsFromDir(dir string, include_incomplete bool) ([]*pb.RepoEntry, error) {
+	fis, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	var res []*pb.RepoEntry
+	for _, fi := range fis {
+		re := &pb.RepoEntry{}
+		re.Name = fi.Name()
+		re.Type = 1
+		if fi.IsDir() {
+			re.Type = 2
+		}
+		re.Domain = getDomainForRepo(re)
+		res = append(res, re)
+	}
+	return res, nil
 }

@@ -72,3 +72,4 @@ func (w *writer) Close() error {
 	w.cur_file = nil
 	return nil
 }
+

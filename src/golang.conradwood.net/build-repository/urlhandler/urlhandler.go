@@ -79,3 +79,4 @@ func (d *downloader) download_loop() {
 	}
 	fmt.Printf("download_loop completed\n")
 }
+

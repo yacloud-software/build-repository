@@ -22,3 +22,4 @@ func DownloadURL() {
 	f.Close()
 	fmt.Printf("File saved to %s\n", outfile)
 }
+

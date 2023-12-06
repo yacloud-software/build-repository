@@ -9,7 +9,7 @@ require (
 	golang.conradwood.net/apis/deploymonkey v1.1.2643
 	golang.conradwood.net/apis/registry v1.1.2643
 	golang.conradwood.net/apis/slackgateway v1.1.2643
-	golang.conradwood.net/go-easyops v0.1.22436
+	golang.conradwood.net/go-easyops v0.1.22616
 	golang.org/x/net v0.18.0
 	golang.org/x/sys v0.14.0
 	golang.yacloud.eu/apis/buildrepoarchive v1.1.2643

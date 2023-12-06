@@ -12,3 +12,4 @@ var (
 func GetDomainID() string {
 	return *domain_id
 }
+

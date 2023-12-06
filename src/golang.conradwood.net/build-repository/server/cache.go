@@ -77,3 +77,4 @@ func (cache *Cache) DelStored(id string) {
 	delete(cache.stored, id)
 	cachelock.Unlock()
 }
+

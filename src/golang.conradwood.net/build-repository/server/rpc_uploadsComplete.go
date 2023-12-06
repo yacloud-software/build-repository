@@ -287,3 +287,4 @@ func tellUsers(msg string) {
 		fmt.Printf("Posted slack message: %s\n", msg)
 	}
 }
+

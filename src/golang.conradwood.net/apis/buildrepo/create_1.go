@@ -51,3 +51,4 @@ func init() {
    client.RegisterDependency("buildrepo.BuildRepoManager")
    AddService("buildrepo.BuildRepoManager")
 }
+

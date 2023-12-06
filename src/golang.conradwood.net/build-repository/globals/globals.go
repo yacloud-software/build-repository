@@ -14,3 +14,4 @@ func UploadCompleted() {
 func LastUploadCompleted() time.Time {
 	return last_upload
 }
+

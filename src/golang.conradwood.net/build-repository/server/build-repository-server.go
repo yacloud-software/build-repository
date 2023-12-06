@@ -85,12 +85,12 @@ func main() {
 	go grpcServer.Serve(lis)
 	sd := server.NewServerDef()
 	sd.SetPort((*port + 1))
-	sd.Register = server.Register(
+	sd.SetRegister(server.Register(
 		func(server *grpc.Server) error {
 			pb.RegisterBuildRepoManagerServer(server, e)
 			return nil
 		},
-	)
+	))
 	server.ServerStartup(sd)
 
 }
@@ -244,3 +244,4 @@ func (b *BuildRepoServer) GetBuildInfo(ctx context.Context, req *pb.BuildDef) (*
 	res.BuildDate = s.BuildDate
 	return res, nil
 }
+

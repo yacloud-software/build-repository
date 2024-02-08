@@ -187,6 +187,13 @@ message ManagerInfo {
   string Domain=1;
 }
 
+/*
+  This service is a low-level building tool to store artefacts
+usually this should not be used by end-users or developers.
+There are multiple instances of BuildRepoManager in the system. To retrieve a file one needs to resolve the instance of where the file(s) are.
+Use the artefact server instead, which does the file resolution and also assigns unique IDs to groups of artefacts for reference
+ */
+
 service BuildRepoManager {
   // get information about this buildrepo instance
   rpc GetManagerInfo(common.Void) returns (ManagerInfo);

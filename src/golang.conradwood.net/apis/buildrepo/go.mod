@@ -5,7 +5,7 @@ go 1.21.1
 require (
 	github.com/golang/protobuf v1.5.4
 	golang.conradwood.net/apis/common v1.1.2899
-	golang.conradwood.net/go-easyops v0.1.26862
+	golang.conradwood.net/go-easyops v0.1.26994
 	golang.org/x/net v0.24.0
 	google.golang.org/grpc v1.63.2
 )

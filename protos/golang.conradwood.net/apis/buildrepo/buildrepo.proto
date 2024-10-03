@@ -221,3 +221,5 @@ service BuildRepoManager {
   // unfail the diskscanner (it goes into fail mode if 100% of syncs fail for too long)
   rpc UnfailDiskScanner(common.Void)returns(common.Void);
 }
+
+

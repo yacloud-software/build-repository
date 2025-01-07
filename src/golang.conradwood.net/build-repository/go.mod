@@ -10,10 +10,10 @@ require (
 	golang.conradwood.net/apis/registry v1.1.3340
 	golang.conradwood.net/apis/slackgateway v1.1.3234
 	golang.conradwood.net/go-easyops v0.1.32768
-	golang.org/x/net v0.32.0
-	golang.org/x/sys v0.28.0
+	golang.org/x/net v0.34.0
+	golang.org/x/sys v0.29.0
 	golang.yacloud.eu/apis/buildrepoarchive v1.1.3234
-	google.golang.org/grpc v1.68.1
+	google.golang.org/grpc v1.69.2
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -48,8 +48,8 @@ require (
 	golang.yacloud.eu/apis/unixipc v1.1.3340 // indirect
 	golang.yacloud.eu/apis/urlcacher v1.1.3340 // indirect
 	golang.yacloud.eu/unixipc v0.1.26852 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
-	google.golang.org/protobuf v1.35.2 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241015192408-796eee8c2d53 // indirect
+	google.golang.org/protobuf v1.36.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

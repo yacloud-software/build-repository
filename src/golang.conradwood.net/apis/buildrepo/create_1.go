@@ -4,7 +4,7 @@
 */
 
 /* geninfo:
-   filename  : protos/golang.conradwood.net/apis/buildrepo/buildrepo.proto
+   filename  : golang.conradwood.net/apis/buildrepo/buildrepo.proto
    gopackage : golang.conradwood.net/apis/buildrepo
    importname: ai_0
    clientfunc: GetBuildRepoManager
@@ -51,30 +51,3 @@ func init() {
    client.RegisterDependency("buildrepo.BuildRepoManager")
    AddService("buildrepo.BuildRepoManager")
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

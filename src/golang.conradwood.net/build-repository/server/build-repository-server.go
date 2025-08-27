@@ -1,13 +1,11 @@
 package main
 
-// don't use it in an untrusted environment!
-// it expects clients to be authenticated
-// (e.g. h2gproxy)
 import (
 	"context"
 	"flag"
 	"fmt"
 	pb "golang.conradwood.net/apis/buildrepo"
+	"golang.conradwood.net/apis/common"
 	"golang.conradwood.net/build-repository/diskscanner"
 	"golang.conradwood.net/build-repository/helper"
 	"golang.conradwood.net/go-easyops/cmdline"
@@ -27,7 +25,6 @@ const (
 	CONST_RAND_ID_STRING_LEN = 64
 )
 
-// static variables
 var (
 	url         = flag.String("download", "", "if non empty, and a valid buildrepo url, then this will download a file")
 	maxsize     = flag.Int("max_gb", 1000, "max gigabyte the repository may grow")
@@ -40,14 +37,13 @@ var (
 	diskScanner *diskscanner.DiskScanner
 )
 
-// BuildRepoServer :
 type BuildRepoServer struct {
 	cache *Cache
 }
 
-// entry point
 func main() {
-	flag.Parse() // parse stuff. see "var" section above
+	flag.Parse()
+	server.SetHealth(common.Health_STARTING)
 	listenAddr := fmt.Sprintf(":%d", *port)
 	fmt.Printf("Starting build-repository Manager %s\n", listenAddr)
 	dmc, err := GetDeployminatorClient(cmdline.GetClientRegistryAddress())
@@ -66,25 +62,18 @@ func main() {
 		fmt.Printf("failed to listen: %v\n", err)
 		os.Exit(10)
 	}
-	/*
-		fs, err := findFilesInDir("/srv/build-repository/artefacts/atomiccounter", []string{"atomiccounter.tar"})
-		utils.Bail("Cannot find files", err)
-		fmt.Printf("Found %d matching files\n", len(fs))
-		for _, s := range fs {
-			fmt.Printf("Found: %s\n", s)
-		}
-		os.Exit(0)
-	*/
+
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 
 	e := new(BuildRepoServer)
 	e.cache = NewCache()
-	pb.RegisterBuildRepoManagerServer(grpcServer, e) // created by proto
+	pb.RegisterBuildRepoManagerServer(grpcServer, e)
 
 	go grpcServer.Serve(lis)
 	sd := server.NewServerDef()
 	sd.SetPort((*port + 1))
+	sd.SetOnStartupCallback(startup)
 	sd.SetRegister(server.Register(
 		func(server *grpc.Server) error {
 			pb.RegisterBuildRepoManagerServer(server, e)
@@ -94,9 +83,10 @@ func main() {
 	server.ServerStartup(sd)
 
 }
+func startup() {
+	server.SetHealth(common.Health_READY)
+}
 
-// UpdateSymLink : remove symlink of old name and point to new
-// (maintains a symlink 'latest' to point to next build)
 func (brs *BuildRepoServer) UpdateSymLink(dir string, latestBuild int) error {
 	linkName := fmt.Sprintf("%s/latest", dir)
 	if *debug {
@@ -126,7 +116,6 @@ func (brs *BuildRepoServer) UpdateSymLink(dir string, latestBuild int) error {
 	return nil
 }
 
-// ReadEntries : return list of entries in dir - obsolete use ReadEntriesNew instead!
 func ReadEntries(dir string) ([]*pb.RepoEntry, error) {
 	fis, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -146,7 +135,6 @@ func ReadEntries(dir string) ([]*pb.RepoEntry, error) {
 	return res, nil
 }
 
-// sanity check for filenames
 func toFilename(f *pb.File) (string, error) {
 	filename := f.Filename
 	if strings.Contains(filename, "~") {
@@ -154,15 +142,9 @@ func toFilename(f *pb.File) (string, error) {
 	}
 	filename = fmt.Sprintf("%s/%s/%s/%d/dist/%s", helper.GetBase(), f.Repository, f.Branch, f.BuildID, filename)
 
-	/*
-		if *debug {
-			fmt.Printf("Filename: %s\n", filename)
-		}
-	*/
 	return filename, nil
 }
 
-// sanity check for filenames & add os - specific path
 func toLinuxFilename(f *pb.File) (string, error) {
 	if f == nil {
 		return "", fmt.Errorf("missing filename")
@@ -181,7 +163,6 @@ func toLinuxFilename(f *pb.File) (string, error) {
 	return filename, nil
 }
 
-// sanity check for filenames & add os - specific path
 func toDarwinFilename(f *pb.File) (string, error) {
 	filename := f.Filename
 	if strings.Contains(filename, "~") {
@@ -194,7 +175,6 @@ func toDarwinFilename(f *pb.File) (string, error) {
 	return filename, nil
 }
 
-// sanity check for filenames & add os - specific path
 func toWindowsFilename(f *pb.File) (string, error) {
 	filename := f.Filename
 	if strings.Contains(filename, "~") {
@@ -244,30 +224,3 @@ func (b *BuildRepoServer) GetBuildInfo(ctx context.Context, req *pb.BuildDef) (*
 	res.BuildDate = s.BuildDate
 	return res, nil
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

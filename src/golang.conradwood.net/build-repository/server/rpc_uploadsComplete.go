@@ -2,9 +2,13 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"strings"
+
 	pb "golang.conradwood.net/apis/buildrepo"
 	dm "golang.conradwood.net/apis/deployminator"
 	dmo "golang.conradwood.net/apis/deploymonkey"
@@ -14,11 +18,8 @@ import (
 	"golang.conradwood.net/go-easyops/authremote"
 	"golang.conradwood.net/go-easyops/client"
 	cl "golang.conradwood.net/go-easyops/cmdline"
+	"golang.conradwood.net/go-easyops/errors"
 	"golang.conradwood.net/go-easyops/utils"
-	"io/ioutil"
-	"os"
-	"os/exec"
-	"strings"
 )
 
 var (
@@ -37,13 +38,13 @@ func (brs *BuildRepoServer) UploadsComplete(ctx context.Context, udr *pb.UploadD
 
 	if udr.BuildStoreid == "" {
 		fmt.Println("BUILD STORE ID IS ZERO LENGTH")
-		return resp, errors.New("missing build store id")
+		return resp, errors.Errorf("missing build store id")
 	}
 
 	// deploy with deploymonkey-client
 	store := brs.cache.GetStored(udr.BuildStoreid)
 	if store == nil {
-		return resp, fmt.Errorf("UNABLE TO RESOLVE BUILD ID: " + udr.BuildStoreid)
+		return resp, errors.Errorf("UNABLE TO RESOLVE BUILD ID: %s", udr.BuildStoreid)
 	}
 	resp.Uploading = store.uploading
 	if store.uploading > 0 {
@@ -287,30 +288,3 @@ func tellUsers(msg string) {
 		fmt.Printf("Posted slack message: %s\n", msg)
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

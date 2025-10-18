@@ -191,7 +191,7 @@ func tellDeployMonkey(store *StoreMetaData, filename string, registry string) {
 		fmt.Printf("failed to tell deploymonkey about new build: %s\n", utils.ErrorString(err))
 		return
 	}
-	fmt.Printf("Told deploymonkey at registry %s about new build %d\n", registry, nbar.BuildID)
+	fmt.Printf("Told deploymonkey at registry %s about new build %d, repo=%d, artefactid=%d\n", registry, nbar.BuildID, nbar.RepositoryID, nbar.ArtefactID)
 }
 func tellDeployMonkeyUsingExternalClient(store *StoreMetaData, filename string, registry string) {
 	var err error
